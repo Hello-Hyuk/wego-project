@@ -1,3 +1,4 @@
+from inspect import ismethoddescriptor
 import socket
 import cv2
 import numpy as np
@@ -24,22 +25,9 @@ params_cam = {
     "Block_SIZE": int(65000)
 }
 
-def nothing(x):
-    pass
-
-def CreateTrackBar_Init():
-    cv2.namedWindow("lane")
-    cv2.createTrackbar("LH", "lane", 0, 179, nothing)
-    cv2.createTrackbar("LS", "lane", 0, 255, nothing)
-    cv2.createTrackbar("LV", "lane", 0, 255, nothing)
-    cv2.createTrackbar("UH", "lane", 179, 179, nothing)
-    cv2.createTrackbar("US", "lane", 255, 255, nothing)
-    cv2.createTrackbar("UV", "lane", 255, 255, nothing)
-
 def onMouse(event, x, y, flags, param) :
     if event == cv2.EVENT_LBUTTONDOWN :
         print('왼쪽 마우스 클릭 했을 때 좌표 : ', x, y)
-
 
 def bird_eye_view(frame):
     ROI_x = 200
@@ -52,6 +40,8 @@ def bird_eye_view(frame):
     # advanced lane detection
     src = np.float32([[4, 391], [276, 178], [359, 178], [639, 391]])
     offset = [150,0]
+    print(np.array([src[0, 0], 2]))
+    
     dst = np.float32([src[0] + offset, np.array([src[0, 0], 0]) + offset, 
                       np.array([src[3, 0], 0]) - offset, src[3] - offset])
    
@@ -62,25 +52,6 @@ def bird_eye_view(frame):
     frame = cv2.warpPerspective(frame, matrix, img_size)
     
     return frame, matrix_inv
-
-#hsv tracker
-def hsv_track(frame):
-    
-    Lower_H_Value = cv2.getTrackbarPos("LH", "lane")
-    Lower_S_Value = cv2.getTrackbarPos("LS", "lane")
-    Lower_V_Value = cv2.getTrackbarPos("LV", "lane")
-    Upper_H_Value = cv2.getTrackbarPos("UH", "lane")
-    Upper_S_Value = cv2.getTrackbarPos("US", "lane")
-    Upper_V_Value = cv2.getTrackbarPos("UV", "lane")
-    
-    lower = np.array([Lower_H_Value,Lower_S_Value,Lower_V_Value])
-    upper = np.array([Upper_H_Value,Upper_S_Value,Upper_V_Value])
-    
-    mask = cv2.inRange(frame, lower, upper)
-
-    res = cv2.bitwise_and(frame,frame, mask= mask)
-
-    return res
 
 def imgblend(frame):
     
@@ -121,10 +92,22 @@ def main():
         if udp_cam.is_img==True :
             
             img_cam = udp_cam.raw_img
+            # 이미지 w, h 추출
+            img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
+            offset = 50
             
-            #resized = cv2.resize(img_cam,[])
-            ###########image filtering########
-            
+            # ROI for lane and Perspective coordinate
+            src = np.float32([ # MASK
+                [img_h-offset, offset], # bottom left
+                [img_h-offset, img_w-offset], # bottom right
+                [offset, offset], # top left
+                [offset, img_w-offset]]) # top right
+
+            dst = np.float32([ # DESTINATION
+                [300, 720], # bottom left
+                [950, 720], # bottom right
+                [300, 0], # top left
+                [950, 0]]) # top right
             # warp perspective
             bev_img, inv_mat = bird_eye_view(img_cam)
             
@@ -140,31 +123,8 @@ def main():
             cv2.imshow('mt', mt)
             cv2.imshow('dt', dt)
             cv2.imshow('lbc', lbc)       
-            ##################################
-            # # warp perspective
-            # bev_img, inv_mat = bird_eye_view(img_cam)
-            
-            # # change color
-            # hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
-            
-            # # lane detection (yello + white lane)
-            # dst = imgblend(hsv)
-            
-            # cv2.imshow('bev',bev_img)
-            # cv2.imshow('lane detection',dst)
-            
-            #########track bar############
-            #lane = hsv_track(hsv)
-            #conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
-            # cv2.imshow('bev',bev_img)
-            # cv2.imshow('hsv',hsv)
-            # cv2.imshow("cam", img_cam)
-            # cv2.imshow("lane",lane)
-            # cv2.imshow("converted",conv)
-            
             cv2.waitKey(1)
-            #cv2.setMouseCallback('cam', onMouse)
-    
+            
 if __name__ == '__main__':
     main()
 
