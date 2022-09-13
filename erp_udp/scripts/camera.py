@@ -46,8 +46,8 @@ def bird_eye_view(frame):
     ROI_y = 320
     img_size = (frame.shape[1], frame.shape[0])
     
-    dst = np.float32([[0, 0], [ROI_x, 0], [0, ROI_y], [ROI_x, ROI_y]])
-    src = np.float32([[276, 178], [359, 178], [4, 391], [639, 391]])
+    #dst = np.float32([[0, 0], [ROI_x, 0], [0, ROI_y], [ROI_x, ROI_y]])
+    #src = np.float32([[276, 178], [359, 178], [4, 391], [639, 391]])
     
     # advanced lane detection
     src = np.float32([[4, 391], [276, 178], [359, 178], [639, 391]])
@@ -125,42 +125,42 @@ def main():
             #resized = cv2.resize(img_cam,[])
             ###########image filtering########
             
-            # # warp perspective
-            # bev_img, inv_mat = bird_eye_view(img_cam)
-            
-            # ht = hls_thresh(bev_img)
-            # st = sobel_thresh(bev_img)
-            # mt = mag_thresh(bev_img)
-            # dt = dir_thresh(bev_img)
-            # lbc = lab_b_channel(bev_img)
-            
-            # cv2.imshow('bev', bev_img)
-            # cv2.imshow('ht', ht)
-            # cv2.imshow('st', st)
-            # cv2.imshow('mt', mt)
-            # cv2.imshow('dt', dt)
-            # cv2.imshow('lbc', lbc)       
-            ##################################
             # warp perspective
             bev_img, inv_mat = bird_eye_view(img_cam)
             
-            # change color
-            hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
+            ht = hls_thresh(bev_img)
+            st = sobel_thresh(bev_img)
+            mt = mag_thresh(bev_img)
+            dt = dir_thresh(bev_img)
+            lbc = lab_b_channel(bev_img)
             
-            # lane detection (yello + white lane)
-            dst = imgblend(hsv)
+            cv2.imshow('bev', bev_img)
+            cv2.imshow('ht', ht)
+            cv2.imshow('st', st)
+            cv2.imshow('mt', mt)
+            cv2.imshow('dt', dt)
+            cv2.imshow('lbc', lbc)       
+            ##################################
+            # # warp perspective
+            # bev_img, inv_mat = bird_eye_view(img_cam)
             
-            cv2.imshow('bev',bev_img)
-            cv2.imshow('lane detection',dst)
+            # # change color
+            # hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
+            
+            # # lane detection (yello + white lane)
+            # dst = imgblend(hsv)
+            
+            # cv2.imshow('bev',bev_img)
+            # cv2.imshow('lane detection',dst)
             
             #########track bar############
-            lane = hsv_track(hsv)
-            conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
-            cv2.imshow('bev',bev_img)
-            cv2.imshow('hsv',hsv)
-            cv2.imshow("cam", img_cam)
-            cv2.imshow("lane",lane)
-            cv2.imshow("converted",conv)
+            #lane = hsv_track(hsv)
+            #conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
+            # cv2.imshow('bev',bev_img)
+            # cv2.imshow('hsv',hsv)
+            # cv2.imshow("cam", img_cam)
+            # cv2.imshow("lane",lane)
+            # cv2.imshow("converted",conv)
             
             cv2.waitKey(1)
             #cv2.setMouseCallback('cam', onMouse)
