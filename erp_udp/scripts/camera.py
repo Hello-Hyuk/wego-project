@@ -25,6 +25,7 @@ params_cam = {
     "Block_SIZE": int(65000)
 }
 
+
 def onMouse(event, x, y, flags, param) :
     if event == cv2.EVENT_LBUTTONDOWN :
         print('왼쪽 마우스 클릭 했을 때 좌표 : ', x, y)
@@ -34,18 +35,23 @@ def bird_eye_view(frame):
     ROI_y = 320
     img_size = (frame.shape[1], frame.shape[0])
     
-    #dst = np.float32([[0, 0], [ROI_x, 0], [0, ROI_y], [ROI_x, ROI_y]])
-    #src = np.float32([[276, 178], [359, 178], [4, 391], [639, 391]])
-    
     # advanced lane detection
-    src = np.float32([[4, 391], [276, 178], [359, 178], [639, 391]])
-    offset = [150,0]
-    print(np.array([src[0, 0], 2]))
+    src = np.float32([[70, 480],[280, 325],[360, 325],[565, 480]])
+    # [[430. 325.] [430.   0.] [210.   0.] [210. 325.]] 
+
+    #src = np.float32([[21, 284], [281, 158], [352, 158], [559, 284]])
+    
+    offset = [60,0]
+    #print(np.array([src[0, 0], 2]))
+    # dst = np.float32([[0, 0], [640, 0],
+    #                            [640, 480 - 1], [0, 480 - 1]])
     
     dst = np.float32([src[0] + offset, np.array([src[0, 0], 0]) + offset, 
                       np.array([src[3, 0], 0]) - offset, src[3] - offset])
-   
-    # find perspective matrix
+    
+    print(dst)
+                    
+    # # find perspective matrix
     matrix = cv2.getPerspectiveTransform(src, dst)
     matrix_inv = cv2.getPerspectiveTransform(dst, src)
     #frame = cv2.warpPerspective(frame, matrix, (ROI_x, ROI_y))
@@ -96,34 +102,44 @@ def main():
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             offset = 50
             
-            # ROI for lane and Perspective coordinate
-            src = np.float32([ # MASK
-                [img_h-offset, offset], # bottom left
-                [img_h-offset, img_w-offset], # bottom right
-                [offset, offset], # top left
-                [offset, img_w-offset]]) # top right
+            
+            # # # ROI for lane and Perspective coordinate
+            # src = np.float32([ # MASK
+            #     [img_h-offset, offset], # bottom left
+            #     [img_h-offset, img_w-offset], # bottom right
+            #     [offset, offset], # top left
+            #     [offset, img_w-offset]]) # top right
 
-            dst = np.float32([ # DESTINATION
-                [300, 720], # bottom left
-                [950, 720], # bottom right
-                [300, 0], # top left
-                [950, 0]]) # top right
-            # warp perspective
+            # dst = np.float32([ # DESTINATION
+            #     [300, 720], # bottom left
+            #     [950, 720], # bottom right
+            #     [300, 0], # top left
+            #     [950, 0]]) # top right
+            # # warp perspective
             bev_img, inv_mat = bird_eye_view(img_cam)
             
+            pts1 = np.array([[70, 480],[280, 325],[360, 325],[565, 480]])
+            pts2 = np.array([[130, 480],[130, 0],[505, 0],[505, 480]]) 
+            
+            cv2.polylines(img_cam,[pts1],True,(0,0,255),2)
+            cv2.polylines(img_cam,[pts2],True,(0,255,255),2)
+         
             ht = hls_thresh(bev_img)
             st = sobel_thresh(bev_img)
             mt = mag_thresh(bev_img)
             dt = dir_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
-            
+            cv2.imshow("cam",img_cam)
             cv2.imshow('bev', bev_img)
-            cv2.imshow('ht', ht)
-            cv2.imshow('st', st)
-            cv2.imshow('mt', mt)
-            cv2.imshow('dt', dt)
-            cv2.imshow('lbc', lbc)       
+            cv2.setMouseCallback("cam",onMouse)
+            # cv2.imshow('ht', ht)
+            # cv2.imshow('st', st)
+            # cv2.imshow('mt', mt)
+            # cv2.imshow('dt', dt)
+            # cv2.imshow('lbc', lbc)       
             cv2.waitKey(1)
+            #cv2.destroyAllWindows()
+            
             
 if __name__ == '__main__':
     main()
