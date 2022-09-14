@@ -65,6 +65,42 @@ def hls_thresh(img, thresh_min=200, thresh_max=255):
     #print("-----s_binary-----\n",s_binary)
     return s_binary
 
+def lab_b_channel(img, thresh=(105,255)):
+    # Normalises and thresholds to the B channel
+    # Convert to LAB color space
+    lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
+    #cv2.imshow("lab",lab)
+    lab_b = lab[:,:,2]
+    #cv2.imshow("lab_b",lab_b)
+    #print("before norm\n",lab_b.shape())
+    
+    # Don't normalize if there are no yellows in the image
+    if np.max(lab_b) > 175:
+        lab_b = lab_b*(255/np.max(lab_b))
+    
+    #print("after norm\n",lab_b)
+    #  Apply a threshold
+    binary_output = np.ones_like(lab_b)
+    binary_output[((lab_b > thresh[0]) & (lab_b <= thresh[1]))] = 0
+    
+    #print("lab_b binary\n",binary_output)
+    return binary_output
+
+def dir_thresh(img, sobel_kernel=3, thresh_min=0, thresh_max=np.pi/2):
+    # Grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    # Calculate the x and y gradients
+    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
+    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
+    # Take the absolute value of the gradient direction, 
+    # apply a threshold, and create a binary image result
+    absgraddir = np.arctan2(np.absolute(sobely), np.absolute(sobelx))
+    binary_output =  np.zeros_like(absgraddir)
+    binary_output[(absgraddir >= thresh_min) & (absgraddir <= thresh_max)] = 1
+
+    # Return the binary image
+    return binary_output
+
 
 def sobel_thresh(img, sobel_kernel=3, orient='x', thresh_min=20, thresh_max=100):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -103,40 +139,4 @@ def mag_thresh(img, sobel_kernel=3, thresh_min=100, thresh_max=255):
     return binary_output
 
 
-def dir_thresh(img, sobel_kernel=3, thresh_min=0, thresh_max=np.pi/2):
-    # Grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    # Calculate the x and y gradients
-    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=sobel_kernel)
-    sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=sobel_kernel)
-    # Take the absolute value of the gradient direction, 
-    # apply a threshold, and create a binary image result
-    absgraddir = np.arctan2(np.absolute(sobely), np.absolute(sobelx))
-    binary_output =  np.zeros_like(absgraddir)
-    binary_output[(absgraddir >= thresh_min) & (absgraddir <= thresh_max)] = 1
-
-    # Return the binary image
-    return binary_output
-
-
-def lab_b_channel(img, thresh=(105,255)):
-    # Normalises and thresholds to the B channel
-    # Convert to LAB color space
-    lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
-    #cv2.imshow("lab",lab)
-    lab_b = lab[:,:,2]
-    #cv2.imshow("lab_b",lab_b)
-    #print("before norm\n",lab_b.shape())
-    
-    # Don't normalize if there are no yellows in the image
-    if np.max(lab_b) > 175:
-        lab_b = lab_b*(255/np.max(lab_b))
-    
-    #print("after norm\n",lab_b)
-    #  Apply a threshold
-    binary_output = np.ones_like(lab_b)
-    binary_output[((lab_b > thresh[0]) & (lab_b <= thresh[1]))] = 0
-    
-    #print("lab_b binary\n",binary_output)
-    return binary_output
 

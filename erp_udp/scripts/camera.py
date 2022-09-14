@@ -33,7 +33,7 @@ bev_roi = np.array([[70, 480],[280, 325],[360, 325],[565, 480]])
 warp_dst = np.array([bev_roi[0] + offset, np.array([bev_roi[0, 0], 0]) + offset, 
                       np.array([bev_roi[3, 0], 0]) - offset, bev_roi[3] - offset])
     
-
+# find coordinate by click image
 def onMouse(event, x, y, flags, param) :
     if event == cv2.EVENT_LBUTTONDOWN :
         print('왼쪽 마우스 클릭 했을 때 좌표 : ', x, y)
@@ -51,35 +51,16 @@ def main():
             # 이미지 w, h 추출
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             offset = 50
-            
-            
-            # # # ROI for lane and Perspective coordinate
-            # src = np.float32([ # MASK
-            #     [img_h-offset, offset], # bottom left
-            #     [img_h-offset, img_w-offset], # bottom right
-            #     [offset, offset], # top left
-            #     [offset, img_w-offset]]) # top right
 
-            # dst = np.float32([ # DESTINATION
-            #     [300, 720], # bottom left
-            #     [950, 720], # bottom right
-            #     [300, 0], # top left
-            #     [950, 0]]) # top right
-            # # warp perspective
             bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
             
             #draw roi
             #draw_roi(img_cam, bev_roi, warp_dst)
 
-
             ht = hls_thresh(bev_img)
-            st = sobel_thresh(bev_img)
-            mt = mag_thresh(bev_img)
-            dt = dir_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
-#            cv2.imshow("cam",img_cam)
+            
             cv2.imshow('bev', bev_img)
-
             cv2.imshow('ht', ht*255)
             cv2.imshow('lbc', lbc*255)
 
@@ -88,7 +69,6 @@ def main():
             
             res2 = np.zeros_like(ht)
             res2[(ht == 1)|(lbc == 1)] = 1
-            
 
             cv2.imshow('res', res2*255)
             left, right, polynom_img = window_search(res2)
