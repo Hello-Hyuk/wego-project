@@ -139,3 +139,4 @@ def lab_b_channel(img, thresh=(105,255)):
     
     #print("lab_b binary\n",binary_output)
     return binary_output
+

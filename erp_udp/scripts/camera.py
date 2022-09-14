@@ -9,6 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from lib.morai_udp_parser import udp_parser
 from lib.cam_util import UDP_CAM_Parser
 from lib.image_filter import draw_roi, bird_eye_view, hls_thresh, sobel_thresh, mag_thresh, dir_thresh, lab_b_channel
+from lib.cam_line import window_search
 import os,json
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
@@ -84,11 +85,14 @@ def main():
 
             # combine
             #res1 = cv2.bitwise_or(ht*255, lbc*255) 
+            
             res2 = np.zeros_like(ht)
             res2[(ht == 1)|(lbc == 1)] = 1
             
 
             cv2.imshow('res', res2*255)
+            left, right, polynom_img = window_search(res2)
+            cv2.imshow("window result",polynom_img)
             # cv2.imshow('mt', mt)
             # cv2.imshow('dt', dt)
                 
