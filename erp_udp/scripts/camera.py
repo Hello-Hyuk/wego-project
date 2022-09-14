@@ -1,5 +1,6 @@
 from inspect import ismethoddescriptor
 import socket
+from wave import Wave_write
 import cv2
 import numpy as np
 import time
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from lib.morai_udp_parser import udp_parser
 from lib.cam_util import UDP_CAM_Parser
-from lib.image_filter import hls_thresh, sobel_thresh, mag_thresh, dir_thresh, lab_b_channel
+from lib.image_filter import draw_roi, bird_eye_view, hls_thresh, sobel_thresh, mag_thresh, dir_thresh, lab_b_channel
 import os,json
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
@@ -25,69 +26,17 @@ params_cam = {
     "Block_SIZE": int(65000)
 }
 
+# bev params
+offset = [60,0]
+bev_roi = np.array([[70, 480],[280, 325],[360, 325],[565, 480]])
+warp_dst = np.array([bev_roi[0] + offset, np.array([bev_roi[0, 0], 0]) + offset, 
+                      np.array([bev_roi[3, 0], 0]) - offset, bev_roi[3] - offset])
+    
 
 def onMouse(event, x, y, flags, param) :
     if event == cv2.EVENT_LBUTTONDOWN :
         print('왼쪽 마우스 클릭 했을 때 좌표 : ', x, y)
 
-def bird_eye_view(frame):
-    ROI_x = 200
-    ROI_y = 320
-    img_size = (frame.shape[1], frame.shape[0])
-    
-    # advanced lane detection
-    src = np.float32([[70, 480],[280, 325],[360, 325],[565, 480]])
-    # [[430. 325.] [430.   0.] [210.   0.] [210. 325.]] 
-
-    #src = np.float32([[21, 284], [281, 158], [352, 158], [559, 284]])
-    
-    offset = [60,0]
-    #print(np.array([src[0, 0], 2]))
-    # dst = np.float32([[0, 0], [640, 0],
-    #                            [640, 480 - 1], [0, 480 - 1]])
-    
-    dst = np.float32([src[0] + offset, np.array([src[0, 0], 0]) + offset, 
-                      np.array([src[3, 0], 0]) - offset, src[3] - offset])
-    
-    print(dst)
-                    
-    # # find perspective matrix
-    matrix = cv2.getPerspectiveTransform(src, dst)
-    matrix_inv = cv2.getPerspectiveTransform(dst, src)
-    #frame = cv2.warpPerspective(frame, matrix, (ROI_x, ROI_y))
-    frame = cv2.warpPerspective(frame, matrix, img_size)
-    
-    return frame, matrix_inv
-
-def imgblend(frame):
-    
-    # yellow color mask with thresh hold range 
-    yellow_lower = np.array([0,83,178])
-    yellow_upper = np.array([79,195,255])
-    
-    yellow_mask = cv2.inRange(frame, yellow_lower, yellow_upper)
-    
-    # white color mask with thresh hold range
-    white_lower = np.array([0,0,190])
-    white_upper = np.array([71,38,255])
-    
-    white_mask = cv2.inRange(frame, white_lower, white_upper)
-    
-    # line detection using hsv mask
-    yellow = cv2.bitwise_and(frame,frame, mask= yellow_mask)
-    white = cv2.bitwise_and(frame,frame, mask= white_mask)
-    
-    cv2.imshow("yello line",yellow)
-    cv2.imshow("white line",white)
-    
-    # blend yellow and white line
-    blend = cv2.bitwise_or(yellow,white)
-    
-    # convert to BGR image
-    res = cv2.cvtColor(blend,cv2.COLOR_HSV2BGR)
-    
-    return res
-    
 def main():
     obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')    
     udp_cam = UDP_CAM_Parser(ip=params_cam["localIP"], port=params_cam["localPort"], params_cam=params_cam)
@@ -116,19 +65,16 @@ def main():
             #     [300, 0], # top left
             #     [950, 0]]) # top right
             # # warp perspective
-            bev_img, inv_mat = bird_eye_view(img_cam)
-            
-            pts1 = np.array([[70, 480],[280, 325],[360, 325],[565, 480]])
-            pts2 = np.array([[130, 480],[130, 0],[505, 0],[505, 480]]) 
-            
-            cv2.polylines(img_cam,[pts1],True,(0,0,255),2)
-            cv2.polylines(img_cam,[pts2],True,(0,255,255),2)
-         
+            bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
+            draw = draw_roi(img_cam, bev_roi, warp_dst)
+
+
             ht = hls_thresh(bev_img)
             st = sobel_thresh(bev_img)
             mt = mag_thresh(bev_img)
             dt = dir_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
+            cv2.imshow("draw",draw)
             cv2.imshow("cam",img_cam)
             cv2.imshow('bev', bev_img)
             cv2.setMouseCallback("cam",onMouse)

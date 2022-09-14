@@ -2,21 +2,55 @@ import cv2
 import numpy as np
 import math
 
-def pers_transform(img, nx=9, ny=6):
-    # Grab the image shape
-    img_size = (img.shape[1], img.shape[0])
-    src = np.float32([[190, 720], [582, 457], [701, 457], [1145, 720]])
-    offset = [150,0]
-    dst = np.float32([src[0] + offset, np.array([src[0, 0], 0]) + offset, 
-                      np.array([src[3, 0], 0]) - offset, src[3] - offset])
-    # Given src and dst points, calculate the perspective transform matrix
-    M = cv2.getPerspectiveTransform(src, dst)
-    # Warp the image using OpenCV warpPerspective()
-    warped = cv2.warpPerspective(img, M, img_size)
-    # Return the resulting image and matrix
-    Minv = cv2.getPerspectiveTransform(dst, src)
+def imgblend(frame):
+    
+    # yellow color mask with thresh hold range 
+    yellow_lower = np.array([0,83,178])
+    yellow_upper = np.array([79,195,255])
+    
+    yellow_mask = cv2.inRange(frame, yellow_lower, yellow_upper)
+    
+    # white color mask with thresh hold range
+    white_lower = np.array([0,0,190])
+    white_upper = np.array([71,38,255])
+    
+    white_mask = cv2.inRange(frame, white_lower, white_upper)
+    
+    # line detection using hsv mask
+    yellow = cv2.bitwise_and(frame,frame, mask= yellow_mask)
+    white = cv2.bitwise_and(frame,frame, mask= white_mask)
+    
+    cv2.imshow("yello line",yellow)
+    cv2.imshow("white line",white)
+    
+    # blend yellow and white line
+    blend = cv2.bitwise_or(yellow,white)
+    
+    # convert to BGR image
+    res = cv2.cvtColor(blend,cv2.COLOR_HSV2BGR)
+    
+    return res
 
-    return warped, M, Minv
+def draw_roi(frame, pts1, pts2):
+    
+    cv2.polylines(copy,[pts1],True,(0,0,255),2)
+    cv2.polylines(copy,[pts2],True,(0,255,255),2)
+
+    cv2.imshow("show roi",copy)
+         
+
+def bird_eye_view(frame, src, dst):
+
+    img_size = (frame.shape[1], frame.shape[0])
+
+    src = np.float32(src)
+    dst = np.float32(dst)
+    # # find perspective matrix
+    matrix = cv2.getPerspectiveTransform(src, dst)
+    matrix_inv = cv2.getPerspectiveTransform(dst, src)
+    frame = cv2.warpPerspective(frame, matrix, img_size)
+    
+    return frame, matrix, matrix_inv
 
 
 def hls_thresh(img, thresh_min=200, thresh_max=255):
