@@ -51,6 +51,7 @@ def main():
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             offset = 50
             
+<<<<<<< Updated upstream
             
             # # # ROI for lane and Perspective coordinate
             # src = np.float32([ # MASK
@@ -83,6 +84,30 @@ def main():
             # cv2.imshow('mt', mt)
             # cv2.imshow('dt', dt)
             # cv2.imshow('lbc', lbc)       
+=======
+            # warp perspective
+            bev_img, inv_mat = bird_eye_view(img_cam)
+            
+            # change color
+            hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
+            
+            # lane detection (yello + white lane)
+            dst = imgblend(hsv)
+            
+            cv2.imshow('bev',bev_img)
+            cv2.imshow('lane detection',dst)
+            
+            #########track bar############
+            lane = hsv_track(hsv)
+            conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
+            cv2.imshow("lane",lane)
+            cv2.imshow('bev',bev_img)
+            cv2.imshow('hsv',hsv)
+            cv2.imshow("cam", img_cam)
+            
+            cv2.imshow("converted",conv)
+            
+>>>>>>> Stashed changes
             cv2.waitKey(1)
             #cv2.destroyAllWindows()
             
