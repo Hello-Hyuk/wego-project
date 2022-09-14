@@ -51,7 +51,6 @@ def main():
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             offset = 50
             
-<<<<<<< Updated upstream
             
             # # # ROI for lane and Perspective coordinate
             # src = np.float32([ # MASK
@@ -67,7 +66,9 @@ def main():
             #     [950, 0]]) # top right
             # # warp perspective
             bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
-            draw = draw_roi(img_cam, bev_roi, warp_dst)
+            
+            #draw roi
+            #draw_roi(img_cam, bev_roi, warp_dst)
 
 
             ht = hls_thresh(bev_img)
@@ -75,39 +76,22 @@ def main():
             mt = mag_thresh(bev_img)
             dt = dir_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
-            cv2.imshow("draw",draw)
-            cv2.imshow("cam",img_cam)
+#            cv2.imshow("cam",img_cam)
             cv2.imshow('bev', bev_img)
-            cv2.setMouseCallback("cam",onMouse)
-            # cv2.imshow('ht', ht)
-            # cv2.imshow('st', st)
+
+            cv2.imshow('ht', ht*255)
+            cv2.imshow('lbc', lbc*255)
+
+            # combine
+            #res1 = cv2.bitwise_or(ht*255, lbc*255) 
+            res2 = np.zeros_like(ht)
+            res2[(ht == 1)|(lbc == 1)] = 1
+            
+
+            cv2.imshow('res', res2*255)
             # cv2.imshow('mt', mt)
             # cv2.imshow('dt', dt)
-            # cv2.imshow('lbc', lbc)       
-=======
-            # warp perspective
-            bev_img, inv_mat = bird_eye_view(img_cam)
-            
-            # change color
-            hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
-            
-            # lane detection (yello + white lane)
-            dst = imgblend(hsv)
-            
-            cv2.imshow('bev',bev_img)
-            cv2.imshow('lane detection',dst)
-            
-            #########track bar############
-            lane = hsv_track(hsv)
-            conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
-            cv2.imshow("lane",lane)
-            cv2.imshow('bev',bev_img)
-            cv2.imshow('hsv',hsv)
-            cv2.imshow("cam", img_cam)
-            
-            cv2.imshow("converted",conv)
-            
->>>>>>> Stashed changes
+                
             cv2.waitKey(1)
             #cv2.destroyAllWindows()
             

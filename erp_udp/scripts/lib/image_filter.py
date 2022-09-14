@@ -33,10 +33,10 @@ def imgblend(frame):
 
 def draw_roi(frame, pts1, pts2):
     
-    cv2.polylines(copy,[pts1],True,(0,0,255),2)
-    cv2.polylines(copy,[pts2],True,(0,255,255),2)
+    cv2.polylines(frame,[pts1],True,(0,0,255),2)
+    cv2.polylines(frame,[pts2],True,(0,255,255),2)
 
-    cv2.imshow("show roi",copy)
+    cv2.imshow("show roi",frame)
          
 
 def bird_eye_view(frame, src, dst):
@@ -61,6 +61,8 @@ def hls_thresh(img, thresh_min=200, thresh_max=255):
     # Creating image masked in S channel
     s_binary = np.zeros_like(s_channel)
     s_binary[(s_channel >= thresh_min) & (s_channel <= thresh_max)] = 1
+    #print("-----s_channel-----\n",s_channel)
+    #print("-----s_binary-----\n",s_binary)
     return s_binary
 
 
@@ -117,15 +119,23 @@ def dir_thresh(img, sobel_kernel=3, thresh_min=0, thresh_max=np.pi/2):
     return binary_output
 
 
-def lab_b_channel(img, thresh=(190,255)):
+def lab_b_channel(img, thresh=(105,255)):
     # Normalises and thresholds to the B channel
     # Convert to LAB color space
     lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
+    #cv2.imshow("lab",lab)
     lab_b = lab[:,:,2]
+    #cv2.imshow("lab_b",lab_b)
+    #print("before norm\n",lab_b.shape())
+    
     # Don't normalize if there are no yellows in the image
     if np.max(lab_b) > 175:
         lab_b = lab_b*(255/np.max(lab_b))
+    
+    #print("after norm\n",lab_b)
     #  Apply a threshold
-    binary_output = np.zeros_like(lab_b)
-    binary_output[((lab_b > thresh[0]) & (lab_b <= thresh[1]))] = 1
+    binary_output = np.ones_like(lab_b)
+    binary_output[((lab_b > thresh[0]) & (lab_b <= thresh[1]))] = 0
+    
+    #print("lab_b binary\n",binary_output)
     return binary_output
