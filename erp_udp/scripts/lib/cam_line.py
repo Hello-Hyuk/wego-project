@@ -7,103 +7,120 @@ def window_search(binary_warped):
     # Take a histogram of the bottom half of the image
     bottom_half_y = binary_warped.shape[0]/2
     histogram = np.sum(binary_warped[int(bottom_half_y):,:], axis=0)
-    # Create an output image to draw on and  visualize the result
+    #cv2.imshow("hist",histogram)
+
+    # binary img (480x640) 을 3차원으로 확장
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
-    # Find the peak of the left and right halves of the histogram
-    # These will be the starting point for the left and right lines
+    
+    # out_img을 절반으로 나눈 후 histogram의 peak지점을 찾아 
+    # 왼쪽, 오른쪽에서 searching하는 시작지점을 찾는다
     midpoint = np.int(histogram.shape[0]/2)
     leftx_base = np.argmax(histogram[:midpoint])
     rightx_base = np.argmax(histogram[midpoint:]) + midpoint
 
-    # Choose the number of sliding windows
-    nwindows = 9
-    # Set height of windows
+    # sliding window params (개수, 윈도우 별 높이)
+    nwindows = 11
     window_height = np.int(binary_warped.shape[0]/nwindows)
-    # Identify the x and y positions of all nonzero pixels in the image
-    nonzero = binary_warped.nonzero()
-    nonzeroy = np.array(nonzero[0])
-    nonzerox = np.array(nonzero[1])
-    # Current positions to be updated for each window
+    # window height 위치 기준 +/-
+    margin = 100
+
+    # binary img내 1인 부분 (차선) 의 index (x,y) 추출
+    lanepixel = binary_warped.nonzero()
+    lanepixel_y = np.array(lanepixel[0])
+    lanepixel_x = np.array(lanepixel[1])
+
+    # window 위치 update
     leftx_current = leftx_base
     rightx_current = rightx_base
-    # Set the width of the windows +/- margin
-    margin = 100
-    # Set minimum number of pixels found to recenter window
-    minpix = 50
-    # Create empty lists to receive left and right lane pixel indices
-    left_lane_inds = []
-    right_lane_inds = []
+
+    # window searching 시 최소픽셀 개수
+    minpix = 40
+
+    # pixel index 담을 list
+    left_lane_idx = []
+    right_lane_idx = []
 
     # Step through the windows one by one
     for window in range(nwindows):
-        # Identify window boundaries in x and y (and right and left)
+        # window boundary 지정 (가로)
         win_y_low = binary_warped.shape[0] - (window+1)*window_height
         win_y_high = binary_warped.shape[0] - window*window_height
+        #print("check param : \n",window,win_y_low,win_y_high)
+        
+        # position 기준 window size
         win_xleft_low = leftx_current - margin
         win_xleft_high = leftx_current + margin
         win_xright_low = rightx_current - margin
         win_xright_high = rightx_current + margin
-        # Draw the windows on the visualization image
+
+        # window 시각화
         cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high),(0,255,0), 2) 
-        cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),(0,255,0), 2) 
-        # Identify the nonzero pixels in x and y within the window
-        good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)).nonzero()[0]
-        good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
+        cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),(0,0,255), 2) 
+        
+        # 왼쪽 오른쪽 각 차선 픽셀이 window안에 있는 경우 index저장
+        good_left_idx = ((lanepixel_y >= win_y_low) & (lanepixel_y < win_y_high) & (lanepixel_x >= win_xleft_low) & (lanepixel_x < win_xleft_high)).nonzero()[0]
+        good_right_idx = ((lanepixel_y >= win_y_low) & (lanepixel_y < win_y_high) & (lanepixel_x >= win_xright_low) & (lanepixel_x < win_xright_high)).nonzero()[0]
+        #print("good",good_left_idx)
+
         # Append these indices to the lists
-        left_lane_inds.append(good_left_inds)
-        right_lane_inds.append(good_right_inds)
-        # If you found > minpix pixels, recenter next window on their mean position
-        if len(good_left_inds) > minpix:
-            leftx_current = np.int(np.mean(nonzerox[good_left_inds]))
-        if len(good_right_inds) > minpix:        
-            rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
+        left_lane_idx.append(good_left_idx)
+        right_lane_idx.append(good_right_idx)
 
-    # Concatenate the arrays of indices
-    left_lane_inds = np.concatenate(left_lane_inds)
-    right_lane_inds = np.concatenate(right_lane_inds)
+        # window내 설정한 pixel개수 이상이 탐지 되면, 픽셀들의 x 좌표 평균으로 업데이트 
+        if len(good_left_idx) > minpix:
+            leftx_current = np.int(np.mean(lanepixel_x[good_left_idx]))
+        if len(good_right_idx) > minpix:        
+            rightx_current = np.int(np.mean(lanepixel_x[good_right_idx]))
 
-    # Extract left and right line pixel positions
-    leftx = nonzerox[left_lane_inds]
-    lefty = nonzeroy[left_lane_inds] 
-    rightx = nonzerox[right_lane_inds]
-    righty = nonzeroy[right_lane_inds] 
+    # np.concatenate(array) => axis 0으로 차원 감소(window개수로 감소)
+    left_lane_idx = np.concatenate(left_lane_idx)
+    right_lane_idx = np.concatenate(right_lane_idx)
+    
+    # window 별 좌우 도로 픽셀 좌표 
+    leftx = lanepixel_x[left_lane_idx]
+    lefty = lanepixel_y[left_lane_idx] 
+    rightx = lanepixel_x[right_lane_idx]
+    righty = lanepixel_y[right_lane_idx] 
 
-    # Fit a second order polynomial to each
+    # 좌우 차선 별 2차함수 계수 추정
     left_fit = np.polyfit(lefty, leftx, 2)
     right_fit = np.polyfit(righty, rightx, 2)
 
-    # Generate x and y values for plotting
+    # 좌우 차선 별 2차 곡선 생성 
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
-    
-    # Generate black image and colour lane lines
-    out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [1, 0, 0]
-    out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 1]
-        
-    # Draw polyline on image
+    center_fitx = (right_fitx + left_fitx)/2
+
+    # window안의 lane을 black 처리
+    out_img[lanepixel_y[left_lane_idx], lanepixel_x[left_lane_idx]] = (0, 0, 0)
+    out_img[lanepixel_y[right_lane_idx], lanepixel_x[right_lane_idx]] =(0, 0, 0)
+
+    # 차선 및 중심 lane display
     right = np.asarray(tuple(zip(right_fitx, ploty)), np.int32)
     left = np.asarray(tuple(zip(left_fitx, ploty)), np.int32)
-    cv2.polylines(out_img, [right], False, (1,1,0), thickness=5)
-    cv2.polylines(out_img, [left], False, (1,1,0), thickness=5)
+    center = np.asarray(tuple(zip(center_fitx, ploty)), np.int32)
+    cv2.polylines(out_img, [right], False, (0,255,0), thickness=5)
+    cv2.polylines(out_img, [left], False, (0,0,255), thickness=5)
+    cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
     
-    return left_lane_inds, right_lane_inds, out_img
+    return left_lane_idx, right_lane_idx, out_img
 
 def margin_search(binary_warped):
     # Performs window search on subsequent frame, given previous frame.
-    nonzero = binary_warped.nonzero()
-    nonzeroy = np.array(nonzero[0])
-    nonzerox = np.array(nonzero[1])
-    margin = 30
+    lanepixel = binary_warped.lanepixel()
+    lanepixel_y = np.array(lanepixel[0])
+    lanepixel_x = np.array(lanepixel[1])
+    margin = 20
 
-    left_lane_inds = ((nonzerox > (left_line.current_fit[0]*(nonzeroy**2) + left_line.current_fit[1]*nonzeroy + left_line.current_fit[2] - margin)) & (nonzerox < (left_line.current_fit[0]*(nonzeroy**2) + left_line.current_fit[1]*nonzeroy + left_line.current_fit[2] + margin))) 
-    right_lane_inds = ((nonzerox > (right_line.current_fit[0]*(nonzeroy**2) + right_line.current_fit[1]*nonzeroy + right_line.current_fit[2] - margin)) & (nonzerox < (right_line.current_fit[0]*(nonzeroy**2) + right_line.current_fit[1]*nonzeroy + right_line.current_fit[2] + margin)))  
+    left_lane_idx = ((lanepixel_x > (left_line.current_fit[0]*(lanepixel_y**2) + left_line.current_fit[1]*lanepixel_y + left_line.current_fit[2] - margin)) & (lanepixel_x < (left_line.current_fit[0]*(lanepixel_y**2) + left_line.current_fit[1]*lanepixel_y + left_line.current_fit[2] + margin))) 
+    right_lane_idx = ((lanepixel_x > (right_line.current_fit[0]*(lanepixel_y**2) + right_line.current_fit[1]*lanepixel_y + right_line.current_fit[2] - margin)) & (lanepixel_x < (right_line.current_fit[0]*(lanepixel_y**2) + right_line.current_fit[1]*lanepixel_y + right_line.current_fit[2] + margin)))  
 
     # Again, extract left and right line pixel positions
-    leftx = nonzerox[left_lane_inds]
-    lefty = nonzeroy[left_lane_inds] 
-    rightx = nonzerox[right_lane_inds]
-    righty = nonzeroy[right_lane_inds]
+    leftx = lanepixel_x[left_lane_idx]
+    lefty = lanepixel_y[left_lane_idx] 
+    rightx = lanepixel_x[right_lane_idx]
+    righty = lanepixel_y[right_lane_idx]
     
     # Fit a second order polynomial to each
     left_fit = np.polyfit(lefty, leftx, 2)
@@ -135,8 +152,8 @@ def margin_search(binary_warped):
     out_img = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
 
     # Color in left and right line pixels
-    out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [1, 0, 0]
-    out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 1]
+    out_img[lanepixel_y[left_lane_idx], lanepixel_x[left_lane_idx]] = [1, 0, 0]
+    out_img[lanepixel_y[right_lane_idx], lanepixel_x[right_lane_idx]] = [0, 0, 1]
         
     # Draw polyline on image
     right = np.asarray(tuple(zip(right_fitx, ploty)), np.int32)
@@ -144,21 +161,21 @@ def margin_search(binary_warped):
     cv2.polylines(out_img, [right], False, (1,1,0), thickness=5)
     cv2.polylines(out_img, [left], False, (1,1,0), thickness=5)
     
-    return left_lane_inds, right_lane_inds, out_img
+    return left_lane_idx, right_lane_idx, out_img
 
-def validate_lane_update(img, left_lane_inds, right_lane_inds):
+def validate_lane_update(img, left_lane_idx, right_lane_idx):
     # Checks if detected lanes are good enough before updating
     img_size = (img.shape[1], img.shape[0])
     
-    nonzero = img.nonzero()
-    nonzeroy = np.array(nonzero[0])
-    nonzerox = np.array(nonzero[1])
+    lanepixel = img.lanepixel()
+    lanepixel_y = np.array(lanepixel[0])
+    lanepixel_x = np.array(lanepixel[1])
     
     # Extract left and right line pixel positions
-    left_line_allx = nonzerox[left_lane_inds]
-    left_line_ally = nonzeroy[left_lane_inds] 
-    right_line_allx = nonzerox[right_lane_inds]
-    right_line_ally = nonzeroy[right_lane_inds]
+    left_line_allx = lanepixel_x[left_lane_idx]
+    left_line_ally = lanepixel_y[left_lane_idx] 
+    right_line_allx = lanepixel_x[right_lane_idx]
+    right_line_ally = lanepixel_y[right_lane_idx]
     
     # Discard lane detections that have very little points, 
     # as they tend to have unstable results in most cases
@@ -210,15 +227,15 @@ def validate_lane_update(img, left_lane_inds, right_lane_inds):
 def find_lanes(img):
     if left_line.detected and right_line.detected:  # Perform margin search if exists prior success.
         # Margin Search
-        left_lane_inds, right_lane_inds,out_img = margin_search(img)
+        left_lane_idx, right_lane_idx,out_img = margin_search(img)
         # Update the lane detections
-        validate_lane_update(img, left_lane_inds, right_lane_inds)
+        validate_lane_update(img, left_lane_idx, right_lane_idx)
         
     else:  # Perform a full window search if no prior successful detections.
         # Window Search
-        left_lane_inds, right_lane_inds,out_img = window_search(img)
+        left_lane_idx, right_lane_idx,out_img = window_search(img)
         # Update the lane detections
-        validate_lane_update(img, left_lane_inds, right_lane_inds)
+        validate_lane_update(img, left_lane_idx, right_lane_idx)
     return out_img
 
 
