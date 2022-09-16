@@ -3,6 +3,46 @@ import numpy as np
 import math
 from collections import deque
 
+class Line():
+    def __init__(self, maxSamples=4):
+        
+        self.maxSamples = maxSamples 
+        # x values of the last n fits of the line
+        self.recent_xfitted = deque(maxlen=self.maxSamples)
+        # Polynomial coefficients for the most recent fit
+        self.current_fit = [np.array([False])]  
+        # Polynomial coefficients averaged over the last n iterations
+        self.best_fit = None  
+        # Average x values of the fitted line over the last n iterations
+        self.bestx = None
+        # Was the line detected in the last iteration?
+        self.detected = False 
+        # Radius of curvature of the line in some units
+        self.radius_of_curvature = None 
+        # Distance in meters of vehicle center from the line
+        self.line_base_pos = None 
+         
+    def update_lane(self, ally, allx):
+        # Updates lanes on every new frame
+        # Mean x value 
+        self.bestx = np.mean(allx, axis=0)
+        # Fit 2nd order polynomial
+        new_fit = np.polyfit(ally, allx, 2)
+        # Update current fit
+        self.current_fit = new_fit
+        # Add the new fit to the queue
+        self.recent_xfitted.append(self.current_fit)
+        # Use the queue mean as the best fit
+        self.best_fit = np.mean(self.recent_xfitted, axis=0)
+        # meters per pixel in y dimension
+        ym_per_pix = 30/720
+        # meters per pixel in x dimension
+        xm_per_pix = 3.7/700
+        # Calculate radius of curvature
+        fit_cr = np.polyfit(ally*ym_per_pix, allx*xm_per_pix, 2)
+        y_eval = np.max(ally)
+        self.radius_of_curvature = ((1 + (2*fit_cr[0]*y_eval*ym_per_pix + fit_cr[1])**2)**1.5) / np.absolute(2*fit_cr[0])
+
 def window_search(binary_warped):
     # Take a histogram of the bottom half of the image
     bottom_half_y = binary_warped.shape[0]/2
@@ -87,26 +127,54 @@ def window_search(binary_warped):
     right_fit = np.polyfit(righty, rightx, 2)
 
     # 좌우 차선 별 2차 곡선 생성 
-    ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
+    ploty = np.linspace(0, binary_warped.shape[0]-1, 3)
+    
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
     center_fitx = (right_fitx + left_fitx)/2
-
+    
     # window안의 lane을 black 처리
     out_img[lanepixel_y[left_lane_idx], lanepixel_x[left_lane_idx]] = (0, 0, 0)
     out_img[lanepixel_y[right_lane_idx], lanepixel_x[right_lane_idx]] =(0, 0, 0)
 
+    # point display
+    center = np.asarray(tuple(zip(center_fitx, ploty)), np.int32)
+    # for point in center:
+    #     cv2.line(out_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
+
     # 차선 및 중심 lane display
     right = np.asarray(tuple(zip(right_fitx, ploty)), np.int32)
     left = np.asarray(tuple(zip(left_fitx, ploty)), np.int32)
-    center = np.asarray(tuple(zip(center_fitx, ploty)), np.int32)
+   
+    #print(right)
     cv2.polylines(out_img, [right], False, (0,255,0), thickness=5)
     cv2.polylines(out_img, [left], False, (0,0,255), thickness=5)
-    cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
+    # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
     
-    return left_lane_idx, right_lane_idx, out_img
+    return left_lane_idx, right_lane_idx, out_img, center
 
-def margin_search(binary_warped):
+def center_point_trans(img, center, inv_mat):
+    real_x = []
+    real_y = []
+    # point transformation : bev 2 original pixel
+    for point in center:
+        #cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
+
+        bp = np.append(point,1)
+        a = (bp[np.newaxis]).T
+        real_point = inv_mat.dot(a)
+    
+        real_x.append(real_point[0]/real_point[2])
+        real_y.append(real_point[1]/real_point[2])
+
+    trans_point = np.squeeze(np.asarray(tuple(zip(real_x,real_y)),np.int32))
+    
+    for point in trans_point:
+        #cv2.line(img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=10)
+        pass
+    return img, trans_point
+    
+def margin_search(binary_warped, left_line, right_line):
     # Performs window search on subsequent frame, given previous frame.
     lanepixel = binary_warped.lanepixel()
     lanepixel_y = np.array(lanepixel[0])

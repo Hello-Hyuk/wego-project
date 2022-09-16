@@ -2,37 +2,59 @@ import cv2
 import numpy as np
 import math
 
-def imgblend(frame):
+#hsv tracker
+def hsv_track(frame):
     
+    Lower_H_Value = cv2.getTrackbarPos("LH", "lane")
+    Lower_S_Value = cv2.getTrackbarPos("LS", "lane")
+    Lower_V_Value = cv2.getTrackbarPos("LV", "lane")
+    Upper_H_Value = cv2.getTrackbarPos("UH", "lane")
+    Upper_S_Value = cv2.getTrackbarPos("US", "lane")
+    Upper_V_Value = cv2.getTrackbarPos("UV", "lane")
+    
+    lower = np.array([Lower_H_Value,Lower_S_Value,Lower_V_Value])
+    upper = np.array([Upper_H_Value,Upper_S_Value,Upper_V_Value])
+    
+    mask = cv2.inRange(frame, lower, upper)
+
+    res = cv2.bitwise_and(frame,frame, mask= mask)
+
+    return res
+
+def imgblend(frame):
+    cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     # yellow color mask with thresh hold range 
-    yellow_lower = np.array([0,83,178])
-    yellow_upper = np.array([79,195,255])
+    yellow_lower = np.array([0,129,183])
+    yellow_upper = np.array([23,255,255])
     
     yellow_mask = cv2.inRange(frame, yellow_lower, yellow_upper)
     
     # white color mask with thresh hold range
-    white_lower = np.array([0,0,190])
-    white_upper = np.array([71,38,255])
+    white_lower = np.array([8,22,214])
+    white_upper = np.array([29,101,255])
     
     white_mask = cv2.inRange(frame, white_lower, white_upper)
     
     # line detection using hsv mask
     yellow = cv2.bitwise_and(frame,frame, mask= yellow_mask)
     white = cv2.bitwise_and(frame,frame, mask= white_mask)
+    # yellow = yellow/np.max(yellow)
+    # white = white/np.max(white)
     
+    
+
     cv2.imshow("yello line",yellow)
     cv2.imshow("white line",white)
     
     # blend yellow and white line
     blend = cv2.bitwise_or(yellow,white)
     
-    # convert to BGR image
-    res = cv2.cvtColor(blend,cv2.COLOR_HSV2BGR)
+    # # convert to BGR image
+    # res = cv2.cvtColor(blend,cv2.COLOR_HSV2BGR)
     
-    return res
+    return blend
 
 def draw_roi(frame, pts1, pts2):
-    
     cv2.polylines(frame,[pts1],True,(0,0,255),2)
     cv2.polylines(frame,[pts2],True,(0,255,255),2)
 
