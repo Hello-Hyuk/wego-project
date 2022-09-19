@@ -40,11 +40,9 @@ def imgblend(frame):
     white = cv2.bitwise_and(frame,frame, mask= white_mask)
     # yellow = yellow/np.max(yellow)
     # white = white/np.max(white)
-    
-    
 
-    cv2.imshow("yello line",yellow)
-    cv2.imshow("white line",white)
+    # cv2.imshow("yello line",yellow)
+    # cv2.imshow("white line",white)
     
     # blend yellow and white line
     blend = cv2.bitwise_or(yellow,white)
@@ -55,8 +53,8 @@ def imgblend(frame):
     return blend
 
 def draw_roi(frame, pts1, pts2):
-    cv2.polylines(frame,[pts1],True,(0,0,255),2)
-    cv2.polylines(frame,[pts2],True,(0,255,255),2)
+    cv2.polylines(frame,[pts1],True,(0,0,255),1)
+    cv2.polylines(frame,[pts2],True,(0,255,255),1)
 
     cv2.imshow("show roi",frame)
          
@@ -74,6 +72,10 @@ def bird_eye_view(frame, src, dst):
     
     return frame, matrix, matrix_inv
 
+def pix2world(src, dst):
+    mat = cv2.getPerspectiveTransform(src, dst)
+    mat_inv = cv2.getPerspectiveTransform(dst, src)
+    return mat, mat_inv
 
 def hls_thresh(img, thresh_min=200, thresh_max=255):
     # Convert to HLS color space and separate the S channel
