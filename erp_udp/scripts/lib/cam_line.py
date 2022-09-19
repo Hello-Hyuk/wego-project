@@ -151,9 +151,9 @@ def window_search(binary_warped):
     cv2.polylines(out_img, [left], False, (0,0,255), thickness=5)
     # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
     
-    return left_lane_idx, right_lane_idx, out_img, center
+    return left_lane_idx, right_lane_idx, out_img, center, rightx_base
 
-def center_point_trans(img, center, inv_mat, inv_m):
+def center_point_trans(img, center, inv_mat):
     real_x = []
     real_y = []
     # point transformation : bev 2 original pixel
@@ -172,12 +172,12 @@ def center_point_trans(img, center, inv_mat, inv_m):
     for point in trans_point:
         cv2.line(img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=10)
 
-    homo_p = np.append(trans_point[0],[0,1])
-    #print(homo_p)
-    t_p = (homo_p[np.newaxis]).T
-    rp = inv_m.dot(t_p)
+    # homo_p = np.append(trans_point[0],[0,1])
+    # #print(homo_p)
+    # t_p = (homo_p[np.newaxis]).T
+    # rp = inv_m.dot(t_p)
     #print(rp)
-    return img, trans_point, rp
+    return img, trans_point
     
 def margin_search(binary_warped, left_line, right_line):
     # Performs window search on subsequent frame, given previous frame.

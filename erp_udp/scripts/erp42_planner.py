@@ -50,8 +50,6 @@ class planner :
 
         self.main_loop()
 
-
-    
     def main_loop(self):
         self.timer=threading.Timer(0.001,self.main_loop)
         self.timer.start()

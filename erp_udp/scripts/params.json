@@ -28,7 +28,6 @@
 
 	    	"set_traffic_host_port" : 7801,
 	    	"set_traffic_dst_port" : 7800,
-
 	    	
 	    	"vehicle_status_host_port" : 8001,
 	    	"vehicle_status_dst_port" : 8000,

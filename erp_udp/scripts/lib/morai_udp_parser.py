@@ -59,7 +59,6 @@ class udp_parser :
             if header == '#MoraiObjInfo$' :
                 unpacked_data=[]
                 offset_byte=30
-                
                 for i in range(20) :
                     start_byte=i*68
                     obj_id, obj_type = struct.unpack('hh',raw_data[start_byte+offset_byte:start_byte+offset_byte+4])                   
@@ -70,13 +69,14 @@ class udp_parser :
                     vel_x, vel_y, vel_z = struct.unpack('fff',raw_data[start_byte+offset_byte+44:start_byte+offset_byte+56])
                     accel_x, accel_y, accel_z = struct.unpack('fff',raw_data[start_byte+offset_byte+56:start_byte+offset_byte+68])
 
-                    obj_info_list = [obj_id, obj_type, pos_x, pos_y, pos_z, heading, size_x, size_y, size_z, overhang, wheelbase, rear_overhang, vel_x, vel_y, vel_z, accel_x, accel_y, accel_z]
+                    #obj_info_list = [obj_id, obj_type, pos_x, pos_y, pos_z, heading, size_x, size_y, size_z, overhang, wheelbase, rear_overhang, vel_x, vel_y, vel_z, accel_x, accel_y, accel_z]
+                    obj_info_list = [size_x, size_y, size_z, 0]
                     
                     if not(obj_info_list[0] == 0) :
                         unpacked_data.append(obj_info_list)
-             
+                        
                 if len(obj_info_list) != 0 :
-                    self.parsed_data=unpacked_data         
+                    self.parsed_data=unpacked_data     
                 else :
                     self.parsed_data=[]     
 
