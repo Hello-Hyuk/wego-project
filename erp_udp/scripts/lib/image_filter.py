@@ -22,35 +22,34 @@ def hsv_track(frame):
     return res
 
 def imgblend(frame):
-    cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     # yellow color mask with thresh hold range 
-    yellow_lower = np.array([0,111,187])
+    #yellow_lower = np.array([0,111,187])
+    yellow_lower = np.array([0,90,179])
     yellow_upper = np.array([179,255,255])
     
     yellow_mask = cv2.inRange(frame, yellow_lower, yellow_upper)
-    cv2.imshow("mask",yellow_mask)
+    #cv2.imshow("mask",yellow_mask)
     # white color mask with thresh hold range
-    white_lower = np.array([0,0,190])
-    white_upper = np.array([71,38,255])
+    # white_lower = np.array([0,0,226])
+    # white_upper = np.array([71,38,255])
+    white_lower = np.array([0,10,210])
+    white_upper = np.array([29,50,255])
     
     white_mask = cv2.inRange(frame, white_lower, white_upper)
-    
+    #cv2.imshow("wm",white_mask)
     # line detection using hsv mask
     yellow = cv2.bitwise_and(frame,frame, mask= yellow_mask)
     white = cv2.bitwise_and(frame,frame, mask= white_mask)
-    # yellow = yellow/np.max(yellow)
-    # white = white/np.max(white)
 
-    # cv2.imshow("yello line",yellow)
-    # cv2.imshow("white line",white)
-    
-    # blend yellow and white line
     blend = cv2.bitwise_or(yellow,white)
+
+    bin = cv2.cvtColor(blend,cv2.COLOR_BGR2GRAY)
     
-    # # convert to BGR image
-    # res = cv2.cvtColor(blend,cv2.COLOR_HSV2BGR)
-    
-    return blend
+    wy_binary = np.zeros_like(bin)
+    wy_binary[bin != 0] = 1
+
+    return wy_binary
 
 def draw_roi(frame, pts1, pts2):
     cv2.polylines(frame,[pts1],True,(0,0,255),1)
