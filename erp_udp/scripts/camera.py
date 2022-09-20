@@ -28,23 +28,17 @@ params_cam = {
     "Block_SIZE": int(65000)
 }
 
-cam_info = {
-    "YAW": 0.0,
-    "PITCH": 350.0,
-    "ROLL": 0.0,
-    "X":0.0,
-    "Y":0.0,
-    "Z":1.37
-}
+def nothing(x):
+    pass
 
-lidar_info= {
-    "YAW": 0.0,
-    "PITCH": 0.0,
-    "ROLL": 0.0,
-    "X": 0.60,
-    "Y": 0.0,
-    "Z": 0.0
-}
+def CreateTrackBar_Init():
+    cv2.namedWindow("lane")
+    cv2.createTrackbar("LH", "lane", 0, 179, nothing)
+    cv2.createTrackbar("LS", "lane", 0, 255, nothing)
+    cv2.createTrackbar("LV", "lane", 0, 255, nothing)
+    cv2.createTrackbar("UH", "lane", 179, 179, nothing)
+    cv2.createTrackbar("US", "lane", 255, 255, nothing)
+    cv2.createTrackbar("UV", "lane", 255, 255, nothing)
 
 # bev params
 offset = [60,0]
@@ -61,21 +55,18 @@ def main():
     obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')    
     #ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
     udp_cam = UDP_CAM_Parser(ip=params_cam["localIP"], port=params_cam["localPort"], params_cam=params_cam)
-    #CreateTrackBar_Init()
+    CreateTrackBar_Init()
     
     while True :
 
         if udp_cam.is_img==True :
             
             #obj data
-            obj_data= obj.get_data()
-            print(obj_data)
-            break
             img_cam = udp_cam.raw_img
             # 이미지 w, h 추출
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             offset = 50
-            cv2.imshow("origin",img_cam)
+            #cv2.imshow("origin",img_cam)
             bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
             
             #draw roi
@@ -85,9 +76,9 @@ def main():
             ht = hls_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
             ib = imgblend(bev_img)
-            cv2.imshow('bev', bev_img)
-            cv2.imshow('ht', ht*255)
-            cv2.imshow('lbc', lbc*255)
+            # cv2.imshow('bev', bev_img)
+            # cv2.imshow('ht', ht*255)
+            # cv2.imshow('lbc', lbc*255)
             
 
             # combine
@@ -103,20 +94,25 @@ def main():
             #cv2.line()
             cprst, trans_points = center_point_trans(img_cam,center,inv_mat)
             for point in center:
-                cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
-            
+                #cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
+                pass
 
             inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))
 
             # print("Warp",inv_img.shape)
             # print("origin",img_cam.shape)
             rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
-
-
-            # inv_m.dot()                                 -> wego
-
-            cv2.imshow("ver1",cprst)
-            cv2.imshow("ver2",rst)
+            
+            hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
+            lane = hsv_track(hsv)
+            conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
+            cv2.imshow('bev',bev_img)
+            #cv2.imshow('hsv',hsv)
+            # cv2.imshow("cam", img_cam)
+            # cv2.imshow("lane",lane)
+            # cv2.imshow("converted",conv)
+            # cv2.imshow("ver1",cprst)
+            # cv2.imshow("ver2",rst)
             
             cv2.waitKey(1)
             #cv2.destroyAllWindows()

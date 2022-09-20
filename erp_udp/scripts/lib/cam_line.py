@@ -170,8 +170,8 @@ def center_point_trans(img, center, inv_mat):
     trans_point = np.squeeze(np.asarray(tuple(zip(real_x,real_y)),np.int32))
     
     for point in trans_point:
-        cv2.line(img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=10)
-
+        #cv2.line(img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=10)
+        pass
     # homo_p = np.append(trans_point[0],[0,1])
     # #print(homo_p)
     # t_p = (homo_p[np.newaxis]).T
