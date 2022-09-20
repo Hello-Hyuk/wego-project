@@ -117,25 +117,17 @@ def main():
             # 이미지 w, h 추출
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             offset = 50
-            #cv2.imshow("origin",img_cam)
             bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
             
             #draw roi
             #draw_roi(img_cam, bev_roi, warp_dst)
 
-            # thresh
+            # color thresh
             ht = hls_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
             ib = imgblend(bev_img)
             
-            # cv2.imshow('bev', bev_img)
-            # cv2.imshow('ht', ht*255)
-            # cv2.imshow('lbc', lbc*255)
-            # cv2.imshow('ib', ib*255)
-            
-
-            # combine
-            #res1 = cv2.bitwise_or(ht*255, lbc*255) 
+            #camera 
             #######################################################
             
             res2 = np.zeros_like(ht)
@@ -159,16 +151,13 @@ def main():
             rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
             
             hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
-
-        
+            cv2.imshow("ver2",rst)
             #######################################################
 
-            #cv2.imshow('hsv',hsv)
-            # cv2.imshow("cam", img_cam)
-            # cv2.imshow("ver1",cprst)
-            cv2.imshow("ver2",rst)
-            
-
+            #obj info
+            #######################################################
+            obj_data=obj.get_data()   
+            print(obj_data)
 
             #########track bar############
             # lane = hsv_track(hsv)
