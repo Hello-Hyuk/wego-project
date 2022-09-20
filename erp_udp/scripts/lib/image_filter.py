@@ -24,14 +24,14 @@ def hsv_track(frame):
 def imgblend(frame):
     cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
     # yellow color mask with thresh hold range 
-    yellow_lower = np.array([16,93,0])
-    yellow_upper = np.array([86,255,255])
+    yellow_lower = np.array([0,111,187])
+    yellow_upper = np.array([179,255,255])
     
     yellow_mask = cv2.inRange(frame, yellow_lower, yellow_upper)
-    
+    cv2.imshow("mask",yellow_mask)
     # white color mask with thresh hold range
-    white_lower = np.array([0,24,212])
-    white_upper = np.array([25,122,255])
+    white_lower = np.array([0,0,190])
+    white_upper = np.array([71,38,255])
     
     white_mask = cv2.inRange(frame, white_lower, white_upper)
     
@@ -41,8 +41,8 @@ def imgblend(frame):
     # yellow = yellow/np.max(yellow)
     # white = white/np.max(white)
 
-    cv2.imshow("yello line",yellow)
-    cv2.imshow("white line",white)
+    # cv2.imshow("yello line",yellow)
+    # cv2.imshow("white line",white)
     
     # blend yellow and white line
     blend = cv2.bitwise_or(yellow,white)

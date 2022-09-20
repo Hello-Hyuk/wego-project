@@ -40,6 +40,57 @@ def CreateTrackBar_Init():
     cv2.createTrackbar("US", "lane", 255, 255, nothing)
     cv2.createTrackbar("UV", "lane", 255, 255, nothing)
 
+def hsv_track(frame):
+    
+    Lower_H_Value = cv2.getTrackbarPos("LH", "lane")
+    Lower_S_Value = cv2.getTrackbarPos("LS", "lane")
+    Lower_V_Value = cv2.getTrackbarPos("LV", "lane")
+    Upper_H_Value = cv2.getTrackbarPos("UH", "lane")
+    Upper_S_Value = cv2.getTrackbarPos("US", "lane")
+    Upper_V_Value = cv2.getTrackbarPos("UV", "lane")
+    
+    lower = np.array([Lower_H_Value,Lower_S_Value,Lower_V_Value])
+    upper = np.array([Upper_H_Value,Upper_S_Value,Upper_V_Value])
+    
+    mask = cv2.inRange(frame, lower, upper)
+
+    res = cv2.bitwise_and(frame,frame, mask= mask)
+
+    return res
+
+def imgblend(frame):
+    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+    # yellow color mask with thresh hold range 
+    #yellow_lower = np.array([0,111,187])
+    yellow_lower = np.array([0,90,179])
+    yellow_upper = np.array([179,255,255])
+    
+    yellow_mask = cv2.inRange(frame, yellow_lower, yellow_upper)
+    #cv2.imshow("mask",yellow_mask)
+    # white color mask with thresh hold range
+    # white_lower = np.array([0,0,226])
+    # white_upper = np.array([71,38,255])
+    white_lower = np.array([0,10,210])
+    white_upper = np.array([29,50,255])
+    
+    white_mask = cv2.inRange(frame, white_lower, white_upper)
+    #cv2.imshow("wm",white_mask)
+    # line detection using hsv mask
+    yellow = cv2.bitwise_and(frame,frame, mask= yellow_mask)
+    white = cv2.bitwise_and(frame,frame, mask= white_mask)
+
+    blend = cv2.bitwise_or(yellow,white)
+
+    bin = cv2.cvtColor(blend,cv2.COLOR_BGR2GRAY)
+    
+    wy_binary = np.zeros_like(bin)
+    wy_binary[bin != 0] = 1
+    
+    # blend yellow and white line
+    #blend = cv2.bitwise_or(y_binary,w_binary)
+    # # convert to BGR image
+    
+    return wy_binary
 # bev params
 offset = [60,0]
 bev_roi = np.array([[73, 480],[277, 325],[360, 325],[563, 480]])
@@ -55,7 +106,7 @@ def main():
     obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')    
     #ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
     udp_cam = UDP_CAM_Parser(ip=params_cam["localIP"], port=params_cam["localPort"], params_cam=params_cam)
-    CreateTrackBar_Init()
+    #CreateTrackBar_Init()
     
     while True :
 
@@ -76,25 +127,29 @@ def main():
             ht = hls_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
             ib = imgblend(bev_img)
+            
             # cv2.imshow('bev', bev_img)
             # cv2.imshow('ht', ht*255)
             # cv2.imshow('lbc', lbc*255)
+            # cv2.imshow('ib', ib*255)
             
 
             # combine
             #res1 = cv2.bitwise_or(ht*255, lbc*255) 
+            #######################################################
             
             res2 = np.zeros_like(ht)
-            res2[(ht == 1)|(lbc == 1)] = 1
+            res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 1
             real_x = []
             real_y = []
-            #cv2.imshow('res', res2*255)
+            cv2.imshow('res', res2*255)
+            
             left, right, polynom_img, center, rightx_base = window_search(res2)
             #ct = np.array(center)
             #cv2.line()
             cprst, trans_points = center_point_trans(img_cam,center,inv_mat)
             for point in center:
-                #cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
+                cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
                 pass
 
             inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))
@@ -104,16 +159,25 @@ def main():
             rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
             
             hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
-            lane = hsv_track(hsv)
-            conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
-            cv2.imshow('bev',bev_img)
+
+        
+            #######################################################
+
             #cv2.imshow('hsv',hsv)
             # cv2.imshow("cam", img_cam)
-            # cv2.imshow("lane",lane)
-            # cv2.imshow("converted",conv)
             # cv2.imshow("ver1",cprst)
-            # cv2.imshow("ver2",rst)
+            cv2.imshow("ver2",rst)
             
+
+
+            #########track bar############
+            # lane = hsv_track(hsv)
+            # conv = cv2.cvtColor(lane,cv2.COLOR_HSV2BGR)
+            cv2.imshow('bev',bev_img)
+            # cv2.imshow('hsv',hsv)
+            # cv2.imshow("cam", img_cam)
+            #cv2.imshow("lane",lane)
+            # cv2.imshow("converted",conv)
             cv2.waitKey(1)
             #cv2.destroyAllWindows()
             
