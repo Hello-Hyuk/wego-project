@@ -12,6 +12,7 @@ from lib.cam_util import UDP_CAM_Parser, transformMTX_lidar2cam
 from lib.image_filter import *
 from lib.cam_line import *
 import os,json
+from lib.common_util import *
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
 
@@ -27,6 +28,62 @@ params_cam = {
     "localPort": cam_port,
     "Block_SIZE": int(65000)
 }
+param_lidar = {
+    "YAW":0.0,
+    "PITCH":0.0,
+    "ROLL":0.0,
+    "X":0.6,
+    "Y":0.0,
+    "Z":0.62
+}
+param_cam = {
+    "YAW":0.0,
+    "PITCH":35.0,
+    "ROLL":0.0,
+    "X":0.0,
+    "Y":0.0,
+    "Z":1.37
+}
+##### camera lidar calibration
+def transformMTX_lidar2cam(params_lidar, params_cam):
+    '''
+    transform the coordinate of the lidar points to the camera coordinate
+    \n xs, ys, zs : xyz components of lidar points w.r.t a lidar coordinate
+    \n params_lidar : parameters from lidars 
+    \n params_cam : parameters from cameras 
+    '''
+    lidar_yaw, lidar_pitch, lidar_roll = [np.deg2rad(params_lidar.get(i)) for i in (["YAW","PITCH","ROLL"])]
+    cam_yaw, cam_pitch, cam_roll = [np.deg2rad(params_cam.get(i)) for i in (["YAW","PITCH","ROLL"])]
+    
+    #Relative position of lidar w.r.t cam
+    lidar_pos = [params_lidar.get(i) for i in (["X","Y","Z"])]
+    cam_pos = [params_cam.get(i) for i in (["X","Y","Z"])]
+
+    x_rel = cam_pos[0] - lidar_pos[0]
+    y_rel = cam_pos[1] - lidar_pos[1]
+    z_rel = cam_pos[2] - lidar_pos[2]
+
+    R_T = np.matmul(RotationMatrix(lidar_yaw, lidar_pitch, lidar_roll).T, TranslationMatrix(-x_rel, -y_rel, -z_rel).T)
+    R_T = np.matmul(R_T, RotationMatrix(cam_yaw, cam_pitch, cam_roll))
+    R_T = np.matmul(R_T, RotationMatrix(np.deg2rad(-90.), 0., 0.))
+    R_T = np.matmul(R_T, RotationMatrix(0, 0., np.deg2rad(-90.)))
+    
+    #rotate and translate the coordinate of a lidar
+    R_T = R_T.T 
+    
+    print('r : \n')
+
+    print(R_T[:3,:3])
+
+    print('t : \n')
+
+    print(R_T[:3,3])
+    R_T_inv= np.linalg.inv(R_T)  
+
+    return R_T, R_T_inv
+#####
+
+
 
 def nothing(x):
     pass
@@ -96,7 +153,7 @@ offset = [60,0]
 bev_roi = np.array([[73, 480],[277, 325],[360, 325],[563, 480]])
 warp_dst = np.array([bev_roi[0] + offset, np.array([bev_roi[0, 0], 0]) + offset, 
                       np.array([bev_roi[3, 0], 0]) - offset, bev_roi[3] - offset])
-    
+print(warp_dst)
 # find coordinate by click image
 def onMouse(event, x, y, flags, param) :
     if event == cv2.EVENT_LBUTTONDOWN :
@@ -120,7 +177,7 @@ def main():
             bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
             
             #draw roi
-            #draw_roi(img_cam, bev_roi, warp_dst)
+            draw_roi(img_cam, bev_roi, warp_dst)
 
             # color thresh
             ht = hls_thresh(bev_img)
@@ -157,7 +214,26 @@ def main():
             #obj info
             #######################################################
             obj_data=obj.get_data()   
-            print(obj_data)
+            #print(obj_data)
+            
+            m, inv_m = transformMTX_lidar2cam(param_lidar, param_cam)
+            #center_point_trans()
+            # real xy roi
+            # 102.07955932617188, 1610.080322265625
+            # 114.06775665283203, 1610.13671875
+            # 113.73362731933594, 1606.554931640625
+            # 102.07512664794922, 1606.4735107421875 -0.4281078577041626
+            # 108.23725128173828, 1608.2720947265625 
+            real_point = [102.07512664794922, 1606.4735107421875 -0.4281078577041626]
+            round_point = []
+            for i in range(len(real_point)):
+                round_point.append(round(i,2))
+            print(round_point)
+            # bev ROI 640x480
+            #[133 480]
+            #[133   0]
+            #[503   0]
+            #[503 480]
 
             #########track bar############
             # lane = hsv_track(hsv)
