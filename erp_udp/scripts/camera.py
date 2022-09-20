@@ -68,7 +68,7 @@ def main():
         if udp_cam.is_img==True :
             
             # #obj data
-            # obj_data= obj.get_data()
+            # obj_data= obj.get_data
             # print(obj_data) 
 
 
