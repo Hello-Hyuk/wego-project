@@ -57,10 +57,11 @@ class planner :
         status_data=self.status.get_data()
         obj_data=self.obj.get_data()
         traffic_data=self.traffic.get_data()
-
+        
         position_x=status_data[12]
         position_y=status_data[13]
         position_z=status_data[14]
+        print(position_x,position_y,position_z)
         heading=status_data[17]
         velocity=status_data[18]
 

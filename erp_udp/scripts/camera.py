@@ -32,9 +32,9 @@ param_lidar = {
     "YAW":0.0,
     "PITCH":0.0,
     "ROLL":0.0,
-    "X":0.6,
+    "X":0.0,
     "Y":0.0,
-    "Z":0.62
+    "Z":1.37
 }
 param_cam = {
     "YAW":0.0,
@@ -71,20 +71,20 @@ def transformMTX_lidar2cam(params_lidar, params_cam):
     #rotate and translate the coordinate of a lidar
     R_T = R_T.T 
     
-    print('r : \n')
+    # print('r : \n')
 
-    print(R_T[:3,:3])
+    # print(R_T[:3,:3])
 
-    print('t : \n')
+    # print('t : \n')
 
-    print(R_T[:3,3])
+    # print(R_T[:3,3])
     R_T_inv= np.linalg.inv(R_T)  
 
     return R_T, R_T_inv
 #####
 
 
-
+#################Track bar###########################
 def nothing(x):
     pass
 
@@ -114,6 +114,7 @@ def hsv_track(frame):
     res = cv2.bitwise_and(frame,frame, mask= mask)
 
     return res
+#############################################################
 
 # bev params
 offset = [60,0]
@@ -121,6 +122,7 @@ bev_roi = np.array([[73, 480],[277, 325],[360, 325],[563, 480]])
 warp_dst = np.array([bev_roi[0] + offset, np.array([bev_roi[0, 0], 0]) + offset, 
                       np.array([bev_roi[3, 0], 0]) - offset, bev_roi[3] - offset])
 print(warp_dst)
+
 # find coordinate by click image
 def onMouse(event, x, y, flags, param) :
     if event == cv2.EVENT_LBUTTONDOWN :
@@ -167,7 +169,11 @@ def main():
             for point in center:
                 cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
                 pass
-
+            uv = np.append(trans_points[0],1)[np.newaxis].T
+            #np.matmul(uv)
+            # [[319 324]
+            # [319 347]
+            # [303 478]]
             inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))
 
             # print("Warp",inv_img.shape)
@@ -181,9 +187,18 @@ def main():
             #obj info
             #######################################################
             obj_data=obj.get_data()   
-            #print(obj_data)
+            print(obj_data)
             
             m, inv_m = transformMTX_lidar2cam(param_lidar, param_cam)
+            print(inv_m.shape,inv_m)
+            inv_matd = np.delete(inv_m,3,axis=0)
+            print(uv,uv.shape,inv_matd.shape)
+            
+            xy_point = np.matmul(uv.T,inv_matd)
+            print(xy_point.T)
+            #138.68780517578125 1617.496337890625
+            #137.87428283691406, 1632.3353271484375
+
             #center_point_trans()
             # real xy roi
             # 102.07955932617188, 1610.080322265625
@@ -191,11 +206,7 @@ def main():
             # 113.73362731933594, 1606.554931640625
             # 102.07512664794922, 1606.4735107421875 -0.4281078577041626
             # 108.23725128173828, 1608.2720947265625 
-            real_point = [102.07512664794922, 1606.4735107421875 -0.4281078577041626]
-            round_point = []
-            for i in range(len(real_point)):
-                round_point.append(round(i,2))
-            print(round_point)
+
             # bev ROI 640x480
             #[133 480]
             #[133   0]

@@ -3,6 +3,27 @@ import numpy as np
 import math
 from collections import deque
 
+def center_point_trans(img, center, inv_mat):
+    real_x = []
+    real_y = []
+    # point transformation : bev 2 original pixel
+    for point in center:
+        #cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
+
+        bp = np.append(point,1)
+        a = (bp[np.newaxis]).T
+        real_point = inv_mat.dot(a)
+    
+        real_x.append(real_point[0]/real_point[2])
+        real_y.append(real_point[1]/real_point[2])
+
+    trans_point = np.squeeze(np.asarray(tuple(zip(real_x,real_y)),np.int32))
+    
+    for point in trans_point:
+        cv2.line(img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=10)
+        
+    return img, trans_point
+
 class Line():
     def __init__(self, maxSamples=4):
         
@@ -152,32 +173,6 @@ def window_search(binary_warped):
     # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
     
     return left_lane_idx, right_lane_idx, out_img, center, rightx_base
-
-def center_point_trans(img, center, inv_mat):
-    real_x = []
-    real_y = []
-    # point transformation : bev 2 original pixel
-    for point in center:
-        #cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
-
-        bp = np.append(point,1)
-        a = (bp[np.newaxis]).T
-        real_point = inv_mat.dot(a)
-    
-        real_x.append(real_point[0]/real_point[2])
-        real_y.append(real_point[1]/real_point[2])
-
-    trans_point = np.squeeze(np.asarray(tuple(zip(real_x,real_y)),np.int32))
-    
-    for point in trans_point:
-        #cv2.line(img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=10)
-        pass
-    # homo_p = np.append(trans_point[0],[0,1])
-    # #print(homo_p)
-    # t_p = (homo_p[np.newaxis]).T
-    # rp = inv_m.dot(t_p)
-    #print(rp)
-    return img, trans_point
     
 def margin_search(binary_warped, left_line, right_line):
     # Performs window search on subsequent frame, given previous frame.
