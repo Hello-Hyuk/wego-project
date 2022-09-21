@@ -34,7 +34,7 @@ class planner :
   
 
         self.txt_reader=pathReader()
-        self.global_path=self.txt_reader.read('kcity.txt')
+        self.global_path=self.txt_reader.read('lane_path.txt')
 
         self.pure_pursuit=purePursuit()
   

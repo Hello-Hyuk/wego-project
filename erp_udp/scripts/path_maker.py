@@ -1,3 +1,4 @@
+from dis import dis
 from lib.morai_udp_parser import udp_parser
 import time
 import threading
@@ -24,7 +25,6 @@ class path_maker :
         self.file_path=os.path.dirname( os.path.abspath( __file__ ) )
         self.file_path = os.path.normpath(os.path.join(self.file_path, '..'))
 
-        
         full_path = self.file_path+'/'+path_folder_name+'/'+path_file_name
         self.f=open(full_path, 'w')
 
@@ -32,12 +32,6 @@ class path_maker :
         self.prev_y = 0
         
         self._is_status=False
-        while not self._is_status :
-            if not self.status.get_data() :
-                print('No Status Data Cannot run main_loop')
-                time.sleep(1)
-            else :
-                self._is_status=True
 
         self.main_loop()
         # self.f.close()
@@ -50,12 +44,13 @@ class path_maker :
         
         status_data=self.status.get_data()
         
-        position_x=status_data[0]
-        position_y=status_data[1]
-        position_z=status_data[2]
+        position_x=status_data[12]
+        position_y=status_data[13]
+        position_z=status_data[14]
 
         
         distance = sqrt(pow(position_x-self.prev_x,2)+pow(position_y-self.prev_y,2))
+        print(distance)
         if distance > 0.3 :
             data = '{0}\t{1}\t{2}\n'.format(position_x,position_y,position_z)
             self.f.write(data)
@@ -66,14 +61,10 @@ class path_maker :
 
 
 if __name__ == "__main__":
-
-
     path=path_maker()
     while True :
         pass
  
- ##
-
 
 
 
