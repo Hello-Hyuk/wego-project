@@ -37,7 +37,7 @@
 	    	"object_info_dst_port" : 8100,
 	    	
 			"make_path_folder_name" : "path",
-			"make_path_file_name" : "lane_path.txt",
+			"make_path_file_name" : "new_curve.txt",
 			
 			"planner_path_file_name" : "kcity.txt"
 		}		
