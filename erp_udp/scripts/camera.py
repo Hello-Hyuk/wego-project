@@ -122,6 +122,22 @@ bev_roi = np.array([[73, 480],[277, 325],[360, 325],[563, 480]])
 warp_dst = np.array([bev_roi[0] + offset, np.array([bev_roi[0, 0], 0]) + offset, 
                       np.array([bev_roi[3, 0], 0]) - offset, bev_roi[3] - offset])
 print(warp_dst)
+#pix2world param
+# real xy roi
+#97.23139953613281, 1610.06298828125, -0.42770472168922424
+#109.17155456542969, 1610.157958984375
+#109.2884750366211, 1606.446044921875
+#97.22319030761719, 1606.4361572265625
+
+# bev ROI 640x480
+#[133 480]
+#[133   0]
+#[503   0]
+#[503 480]
+
+pix = np.array([[73, 480],[277, 325],[360, 325],[563, 480]],np.float32)
+world_warp = np.array([[97,1610],[109,1610],[109,1606],[97,1606]],np.float32)
+pix2world_m = cv2.getPerspectiveTransform(pix, world_warp)
 
 # find coordinate by click image
 def onMouse(event, x, y, flags, param) :
@@ -169,33 +185,31 @@ def main():
             for point in center:
                 cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
                 pass
+            
             uv = np.append(trans_points[0],1)[np.newaxis].T
-            #np.matmul(uv)
-            # [[319 324]
-            # [319 347]
-            # [303 478]]
+            real_point = pix2world_m.dot(uv)
+            real_point /= real_point[2]
+            print("real x ,y :",real_point[0],real_point[1])
+            
             inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))
-
-            # print("Warp",inv_img.shape)
-            # print("origin",img_cam.shape)
             rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
             
-            hsv = cv2.cvtColor(bev_img,cv2.COLOR_BGR2HSV)
             cv2.imshow("ver2",rst)
             #######################################################
 
             #obj info
+            
             #######################################################
             obj_data=obj.get_data()   
-            print(obj_data)
+            print("obj_data",obj_data)
             
             m, inv_m = transformMTX_lidar2cam(param_lidar, param_cam)
-            print(inv_m.shape,inv_m)
+#            print(inv_m.shape,inv_m)
             inv_matd = np.delete(inv_m,3,axis=0)
-            print(uv,uv.shape,inv_matd.shape)
+#            print(uv,uv.shape,inv_matd.shape)
             
             xy_point = np.matmul(uv.T,inv_matd)
-            print(xy_point.T)
+#            print(xy_point.T)
             #138.68780517578125 1617.496337890625
             #137.87428283691406, 1632.3353271484375
 
@@ -204,7 +218,8 @@ def main():
             # 102.07955932617188, 1610.080322265625
             # 114.06775665283203, 1610.13671875
             # 113.73362731933594, 1606.554931640625
-            # 102.07512664794922, 1606.4735107421875 -0.4281078577041626
+            # 102.07512664794922, 1606.4735107421875 
+            
             # 108.23725128173828, 1608.2720947265625 
 
             # bev ROI 640x480
