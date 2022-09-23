@@ -21,7 +21,6 @@ user_ip = params["user_ip"]
 host_ip = params["host_ip"]
 
 
-
 class planner :
 
     def __init__(self):
@@ -31,10 +30,9 @@ class planner :
 
         self.ctrl_cmd=udp_sender(host_ip,params["ctrl_cmd_host_port"],'erp_ctrl_cmd')
         self.set_traffic=udp_sender(host_ip,params["set_traffic_host_port"],'set_traffic')
-  
 
         self.txt_reader=pathReader()
-        self.global_path=self.txt_reader.read('kcity.txt')
+        self.global_path=self.txt_reader.read('lkas.txt')
 
         self.pure_pursuit=purePursuit()
   
@@ -50,10 +48,11 @@ class planner :
 
         self.main_loop()
 
+
+    
     def main_loop(self):
         self.timer=threading.Timer(0.001,self.main_loop)
         self.timer.start()
-        
         status_data=self.status.get_data()
         obj_data=self.obj.get_data()
         traffic_data=self.traffic.get_data()
@@ -61,7 +60,9 @@ class planner :
         position_x=status_data[12]
         position_y=status_data[13]
         position_z=status_data[14]
-        print(position_x,position_y,position_z)
+        
+        
+        
         heading=status_data[17]
         velocity=status_data[18]
 
@@ -69,7 +70,6 @@ class planner :
 
         self.pure_pursuit.getPath(local_path)
         self.pure_pursuit.getEgoStatus(position_x,position_y,position_z,velocity,heading)
-
 
         
 
@@ -84,7 +84,7 @@ class planner :
         brake=0
 
         steering_angle=self.pure_pursuit.steering_angle() # deg
-        print(steering_angle)
+        
         
         self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,steering_angle])
         

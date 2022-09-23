@@ -161,5 +161,33 @@ def mag_thresh(img, sobel_kernel=3, thresh_min=100, thresh_max=255):
     # Return the binary image
     return binary_output
 
+#################Track bar###########################
+def nothing(x):
+    pass
 
+def CreateTrackBar_Init():
+    cv2.namedWindow("lane")
+    cv2.createTrackbar("LH", "lane", 0, 179, nothing)
+    cv2.createTrackbar("LS", "lane", 0, 255, nothing)
+    cv2.createTrackbar("LV", "lane", 0, 255, nothing)
+    cv2.createTrackbar("UH", "lane", 179, 179, nothing)
+    cv2.createTrackbar("US", "lane", 255, 255, nothing)
+    cv2.createTrackbar("UV", "lane", 255, 255, nothing)
 
+def hsv_track(frame):
+    
+    Lower_H_Value = cv2.getTrackbarPos("LH", "lane")
+    Lower_S_Value = cv2.getTrackbarPos("LS", "lane")
+    Lower_V_Value = cv2.getTrackbarPos("LV", "lane")
+    Upper_H_Value = cv2.getTrackbarPos("UH", "lane")
+    Upper_S_Value = cv2.getTrackbarPos("US", "lane")
+    Upper_V_Value = cv2.getTrackbarPos("UV", "lane")
+    
+    lower = np.array([Lower_H_Value,Lower_S_Value,Lower_V_Value])
+    upper = np.array([Upper_H_Value,Upper_S_Value,Upper_V_Value])
+    
+    mask = cv2.inRange(frame, lower, upper)
+
+    res = cv2.bitwise_and(frame,frame, mask= mask)
+
+    return res

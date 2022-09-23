@@ -38,7 +38,10 @@
 			"make_path_folder_name" : "path",
 			"make_path_file_name" : "test_path.txt",
 			
-			"planner_path_file_name" : "kcity.txt"
+			"planner_path_file_name" : "kcity.txt",
+			"lkas_point_file_name" : "lkas.txt",
+			"lkas_point_folder_name" : "lkas_points"
+
 		}		
 		
 }

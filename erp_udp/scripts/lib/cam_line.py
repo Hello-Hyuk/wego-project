@@ -148,7 +148,7 @@ def window_search(binary_warped):
     right_fit = np.polyfit(righty, rightx, 2)
 
     # 좌우 차선 별 2차 곡선 생성 
-    ploty = np.linspace(0, binary_warped.shape[0]-1, 3)
+    ploty = np.linspace(0, binary_warped.shape[0]-1, 10)
     
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
@@ -158,12 +158,8 @@ def window_search(binary_warped):
     out_img[lanepixel_y[left_lane_idx], lanepixel_x[left_lane_idx]] = (0, 0, 0)
     out_img[lanepixel_y[right_lane_idx], lanepixel_x[right_lane_idx]] =(0, 0, 0)
 
-    # point display
-    center = np.asarray(tuple(zip(center_fitx, ploty)), np.int32)
-    # for point in center:
-    #     cv2.line(out_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
-
     # 차선 및 중심 lane display
+    center = np.asarray(tuple(zip(center_fitx, ploty)), np.int32)
     right = np.asarray(tuple(zip(right_fitx, ploty)), np.int32)
     left = np.asarray(tuple(zip(left_fitx, ploty)), np.int32)
    

@@ -37,3 +37,30 @@ def TranslationMatrix(x, y, z):
                   ])
     
     return M
+
+def RTmatrix_2D(theta,tx,ty,scale):
+     
+    Rt = np.array([[math.cos(theta), -math.sin(theta),tx],
+                  [math.sin(theta), math.cos(theta), ty],
+                  [0,               0,               1]
+                  ])
+                     
+    return Rt * scale
+
+def Rmatrix_2D(theta):
+     
+    R = np.array([[np.cos(np.deg2rad(theta)), -np.sin(np.deg2rad(theta)),0],
+                  [np.sin(np.deg2rad(theta)), np.cos(np.deg2rad(theta)), 0],
+                  [0,               0,               1]
+                  ])
+                     
+    return R
+
+def Tmatrix_2D(tx,ty):
+     
+    t = np.array([[1, 0,tx],
+                  [0, 1, ty],
+                  [0, 0, 1]
+                  ])
+                     
+    return t
