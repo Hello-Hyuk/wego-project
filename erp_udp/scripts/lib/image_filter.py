@@ -23,29 +23,22 @@ def hsv_track(frame):
 
 def imgblend(frame):
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-    # yellow color mask with thresh hold range 
-    #yellow_lower = np.array([0,111,187])
+
+    # yellow 임계값 설정 후 mask 생성
     yellow_lower = np.array([0,90,179])
     yellow_upper = np.array([179,255,255])
-    
     yellow_mask = cv2.inRange(frame, yellow_lower, yellow_upper)
-    #cv2.imshow("mask",yellow_mask)
-    # white color mask with thresh hold range
-    # white_lower = np.array([0,0,226])
-    # white_upper = np.array([71,38,255])
+    # white 임계값 설정 후 mask 생성
     white_lower = np.array([0,10,210])
     white_upper = np.array([29,50,255])
-    
     white_mask = cv2.inRange(frame, white_lower, white_upper)
-    #cv2.imshow("wm",white_mask)
-    # line detection using hsv mask
+    # 각 mask를 원본과 연산 후 해당 색 검출
     yellow = cv2.bitwise_and(frame,frame, mask= yellow_mask)
     white = cv2.bitwise_and(frame,frame, mask= white_mask)
-
+    # 각 검출된 이미지 합성
     blend = cv2.bitwise_or(yellow,white)
-
-    bin = cv2.cvtColor(blend,cv2.COLOR_BGR2GRAY)
-    
+    # img binary 화
+    bin = cv2.cvtColor(blend,cv2.COLOR_BGR2GRAY)    
     wy_binary = np.zeros_like(bin)
     wy_binary[bin != 0] = 1
 
@@ -77,36 +70,29 @@ def pix2world(src, dst):
     return mat, mat_inv
 
 def hls_thresh(img, thresh_min=200, thresh_max=255):
-    # Convert to HLS color space and separate the S channel
+    # HLS 색 영역으로 전환 후 S channel 분리
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
     s_channel = hls[:,:,1]
     
-    # Creating image masked in S channel
+    # S channel 임계값 mask를 통해 흰색 차선 검출
     s_binary = np.zeros_like(s_channel)
     s_binary[(s_channel >= thresh_min) & (s_channel <= thresh_max)] = 1
-    #print("-----s_channel-----\n",s_channel)
-    #print("-----s_binary-----\n",s_binary)
+
     return s_binary
 
 def lab_b_channel(img, thresh=(105,255)):
-    # Normalises and thresholds to the B channel
-    # Convert to LAB color space
+    # LAB 색 영역으로 전환 후 B channel 분리
     lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
-    #cv2.imshow("lab",lab)
     lab_b = lab[:,:,2]
-    #cv2.imshow("lab_b",lab_b)
-    #print("before norm\n",lab_b.shape())
     
-    # Don't normalize if there are no yellows in the image
+    # 정규화 진행
     if np.max(lab_b) > 175:
         lab_b = lab_b*(255/np.max(lab_b))
     
-    #print("after norm\n",lab_b)
-    #  Apply a threshold
+    # B channel 임계값 mask를 통해 노란색 차선 검출
     binary_output = np.ones_like(lab_b)
     binary_output[((lab_b > thresh[0]) & (lab_b <= thresh[1]))] = 0
     
-    #print("lab_b binary\n",binary_output)
     return binary_output
 
 def dir_thresh(img, sobel_kernel=3, thresh_min=0, thresh_max=np.pi/2):

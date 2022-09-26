@@ -32,7 +32,7 @@ class planner :
         self.set_traffic=udp_sender(host_ip,params["set_traffic_host_port"],'set_traffic')
 
         self.txt_reader=pathReader()
-        self.global_path=self.txt_reader.read('lkas.txt')
+        self.global_path=self.txt_reader.read('kcity.txt')
 
         self.pure_pursuit=purePursuit()
   
@@ -60,8 +60,6 @@ class planner :
         position_x=status_data[12]
         position_y=status_data[13]
         position_z=status_data[14]
-        
-        
         
         heading=status_data[17]
         velocity=status_data[18]

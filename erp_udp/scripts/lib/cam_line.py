@@ -2,6 +2,41 @@ import cv2
 import numpy as np
 import math
 from collections import deque
+pix = np.array([[73, 480],[277, 325],[360, 325],[563, 480]],np.float32)
+world_warp = np.array([[97,1610],[109,1610],[109,1606],[97,1606]],np.float32)
+pix2world_m = cv2.getPerspectiveTransform(pix, world_warp)
+
+def pix2world(inv_mat, pix_point,origin_m,rm,trans_m):
+    
+    trans_points = point_trans(pix_point,inv_mat)
+    uv = np.append(trans_points[0],1)[np.newaxis].T
+    real_point = pix2world_m.dot(uv)
+    real_point /= real_point[2]
+
+    origin_point = np.matmul(origin_m,real_point)
+    Rwaypoint = np.matmul(rm,origin_point)
+    waypoint = np.matmul(trans_m,Rwaypoint)
+    wp = np.squeeze(waypoint,1)
+    
+    return wp
+
+def point_trans(points, inv_mat):
+    real_x = []
+    real_y = []
+    # point transformation : bev 2 original pixel
+    for point in points:
+        #cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
+
+        bp = np.append(point,1)
+        a = (bp[np.newaxis]).T
+        real_point = inv_mat.dot(a)
+    
+        real_x.append(real_point[0]/real_point[2])
+        real_y.append(real_point[1]/real_point[2])
+
+    trans_point = np.squeeze(np.asarray(tuple(zip(real_x,real_y)),np.int32))
+    
+    return trans_point
 
 def center_point_trans(img, center, inv_mat):
     real_x = []
@@ -70,31 +105,29 @@ def window_search(binary_warped):
     histogram = np.sum(binary_warped[int(bottom_half_y):,:], axis=0)
     #cv2.imshow("hist",histogram)
 
-    # binary img (480x640) 을 3차원으로 확장
+
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
     
-    # out_img을 절반으로 나눈 후 histogram의 peak지점을 찾아 
-    # 왼쪽, 오른쪽에서 searching하는 시작지점을 찾는다
+
     midpoint = np.int(histogram.shape[0]/2)
     leftx_base = np.argmax(histogram[:midpoint])
     rightx_base = np.argmax(histogram[midpoint:]) + midpoint
 
-    # sliding window params (개수, 윈도우 별 높이)
     nwindows = 11
     window_height = np.int(binary_warped.shape[0]/nwindows)
-    # window height 위치 기준 +/-
+    
     margin = 100
 
-    # binary img내 1인 부분 (차선) 의 index (x,y) 추출
+    
     lanepixel = binary_warped.nonzero()
     lanepixel_y = np.array(lanepixel[0])
     lanepixel_x = np.array(lanepixel[1])
 
-    # window 위치 update
+    
     leftx_current = leftx_base
     rightx_current = rightx_base
 
-    # window searching 시 최소픽셀 개수
+    
     minpix = 40
 
     # pixel index 담을 list
@@ -148,7 +181,7 @@ def window_search(binary_warped):
     right_fit = np.polyfit(righty, rightx, 2)
 
     # 좌우 차선 별 2차 곡선 생성 
-    ploty = np.linspace(0, binary_warped.shape[0]-1, 10)
+    ploty = np.linspace(0, binary_warped.shape[0]-1, 3)
     
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
@@ -167,8 +200,11 @@ def window_search(binary_warped):
     cv2.polylines(out_img, [right], False, (0,255,0), thickness=5)
     cv2.polylines(out_img, [left], False, (0,0,255), thickness=5)
     # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
-    
-    return left_lane_idx, right_lane_idx, out_img, center, rightx_base
+    print("left lane idx: \n",left_lane_idx)
+    print(" idx: \n",left)
+    cv2.imshow("window search",out_img)
+    #return left_lane_idx, right_lane_idx, out_img, left, right, center
+    return left, right, center
     
 def margin_search(binary_warped, left_line, right_line):
     # Performs window search on subsequent frame, given previous frame.
@@ -191,9 +227,10 @@ def margin_search(binary_warped, left_line, right_line):
     right_fit = np.polyfit(righty, rightx, 2)
     
     # Generate x and y values for plotting
-    ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
+    ploty = np.linspace(0, binary_warped.shape[0]-1, 3)
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
+    center_fitx = (right_fitx + left_fitx)/2
     
     # Generate a blank image to draw on
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
@@ -220,18 +257,17 @@ def margin_search(binary_warped, left_line, right_line):
     out_img[lanepixel_y[right_lane_idx], lanepixel_x[right_lane_idx]] = [0, 0, 1]
         
     # Draw polyline on image
+    center = np.asarray(tuple(zip(center_fitx, ploty)), np.int32)
     right = np.asarray(tuple(zip(right_fitx, ploty)), np.int32)
     left = np.asarray(tuple(zip(left_fitx, ploty)), np.int32)
-    cv2.polylines(out_img, [right], False, (1,1,0), thickness=5)
-    cv2.polylines(out_img, [left], False, (1,1,0), thickness=5)
-    
-    return left_lane_idx, right_lane_idx, out_img
 
-def validate_lane_update(img, left_lane_idx, right_lane_idx):
+    return left_lane_idx, right_lane_idx, out_img, left, right, center
+
+def validate_lane_update(img, left_lane_idx, right_lane_idx, left_line, right_line):
     # Checks if detected lanes are good enough before updating
     img_size = (img.shape[1], img.shape[0])
     
-    lanepixel = img.lanepixel()
+    lanepixel = img.nonzero()
     lanepixel_y = np.array(lanepixel[0])
     lanepixel_x = np.array(lanepixel[1])
     
@@ -288,22 +324,23 @@ def validate_lane_update(img, left_lane_idx, right_lane_idx):
     left_line.line_base_pos = (car_position - lane_center_position) * xm_per_pix +0.2
     right_line.line_base_pos = left_line.line_base_pos
 
-def find_lanes(img):
+def find_lanes(img, left_line, right_line):
     if left_line.detected and right_line.detected:  # Perform margin search if exists prior success.
         # Margin Search
-        left_lane_idx, right_lane_idx,out_img = margin_search(img)
+        left_lane_idx, right_lane_idx,out_img, left, right, center= margin_search(img)
         # Update the lane detections
-        validate_lane_update(img, left_lane_idx, right_lane_idx)
+        validate_lane_update(img, left_lane_idx, right_lane_idx, left_line, right_line)
         
     else:  # Perform a full window search if no prior successful detections.
         # Window Search
-        left_lane_idx, right_lane_idx,out_img = window_search(img)
+        left_lane_idx, right_lane_idx,out_img,left, right, center = window_search(img)
         # Update the lane detections
-        validate_lane_update(img, left_lane_idx, right_lane_idx)
-    return out_img
+        validate_lane_update(img, left_lane_idx, right_lane_idx, left_line, right_line)
+    
+    return left, right, center
 
 
-def write_stats(img):
+def write_stats(img, left_line, right_line):
     font = cv2.FONT_HERSHEY_PLAIN
     size = 3
     weight = 2
@@ -318,7 +355,7 @@ def write_stats(img):
         cv2.putText(img,'Vehicle is '+ '{0:.2f}'.format(abs(left_line.line_base_pos)*100)+'cm' + ' Left of Center',(30,100), font, size, color, weight)
         
         
-def draw_lane(undist, img, Minv):
+def draw_lane(undist, img, Minv, left_line, right_line):
     # Generate x and y values for plotting
     ploty = np.linspace(0, undist.shape[0] - 1, undist.shape[0])
     # Create an image to draw the lines on
