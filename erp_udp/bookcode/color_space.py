@@ -4,6 +4,10 @@ import numpy as np
 path = "D:/dev/wego-project/erp_udp/bookcode/"
 image = "lena512.bmp"
 
+blue = [255,0,0]
+green = [0,255,0]
+red = [0,0,255]
+
 # 영상 불러오기
 color = cv2.imread(path+image,1)
 gray = cv2.imread(path+image,0)
