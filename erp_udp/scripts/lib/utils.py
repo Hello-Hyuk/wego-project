@@ -43,7 +43,7 @@ class purePursuit :
         self.current_postion=Point()
         self.is_look_forward_point=False
         self.vehicle_length=2
-        self.lfd=5
+        self.lfd=10
         self.min_lfd=5
         self.max_lfd=30
         self.steering=0
@@ -115,10 +115,12 @@ def findLocalPath(ref_path,position_x,position_y):
             min_dis=dis
             current_waypoint=i
 
-    if current_waypoint+50 > len(ref_path) :
+    if current_waypoint + 50 > len(ref_path) :
         last_local_waypoint= len(ref_path)
+        print("last waypoint")
     else :
-        last_local_waypoint=current_waypoint+50
+        last_local_waypoint=current_waypoint+70
+        print("still alive")
 
     for i in range(current_waypoint,last_local_waypoint) :
         pose=[]
