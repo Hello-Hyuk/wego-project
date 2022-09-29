@@ -28,7 +28,6 @@
 
 	    	"set_traffic_host_port" : 7801,
 	    	"set_traffic_dst_port" : 7800,
-
 	    	
 	    	"vehicle_status_host_port" : 8001,
 	    	"vehicle_status_dst_port" : 8000,
@@ -39,7 +38,10 @@
 			"make_path_folder_name" : "path",
 			"make_path_file_name" : "test_path.txt",
 			
-			"planner_path_file_name" : "kcity.txt"
+			"planner_path_file_name" : "kcity.txt",
+			"lkas_point_file_name" : "lkas.txt",
+			"lkas_point_folder_name" : "lkas_points"
+
 		}		
 		
 }

@@ -118,8 +118,9 @@ def transformMTX_lidar2cam(params_lidar, params_cam):
     print('t : \n')
 
     print(R_T[:3,3])
+    R_T_inv= np.linalg.inv(R_T)  
 
-    return R_T
+    return R_T, R_T_inv
 
 
 def project2img_mtx(params_cam):
