@@ -32,16 +32,6 @@ cv2.imshow("gray",gray)
 cv2.waitKey()
 cv2.destroyAllWindows()
 
-
-
-
-
-# # 색 변환
-# cvt_gray = cv2.cvtColor(color,cv2.COLOR_BGR2GRAY)
-# cvt_hsv = cv2.cvtColor(color,cv2.COLOR_BGR2HSV)
-# cv2.imshow("converted gray",cvt_gray)
-# cv2.imshow("converted hsv",cvt_hsv)
-
 # 영상 저장
 cv2.imwrite("D:\dev\wego-project\erp_udp/bookcode\color_lena.jpg",color)
 cv2.imwrite("D:\dev\wego-project\erp_udp/bookcode\gray_lena.jpg",gray)
