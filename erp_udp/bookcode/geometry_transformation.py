@@ -61,3 +61,24 @@ cv2.imshow("affine transformation", a_dst)
 cv2.imshow("perspective transformation", p_dst)
 cv2.waitKey()
 cv2.destroyAllWindows()
+
+rst1 = cv2.hconcat([src,a_dst])
+rst2 = cv2.hconcat([src,p_dst])
+
+srcp = (srcPoint.astype(int)).tolist()
+dstp = (dstPoint.astype(int)).tolist()
+
+# print(type(spoint[0]))
+for sp,dp in zip(srcp,dstp):
+    print(srcp.index(sp))
+    if srcp.index(sp) < 4:
+        cv2.line(rst2,(sp[0],sp[1]),(dp[0]+width,dp[1]),[0,0,255],5)
+    if srcp.index(sp) < 3:
+        print("A")
+        cv2.line(rst1,(sp[0],sp[1]),(dp[0]+width,dp[1]),[0,0,255],5)
+    
+cv2.imshow("affine transformation", rst1)
+cv2.imshow("perspective transformation", rst2)
+cv2.waitKey()
+cv2.destroyAllWindows()
+

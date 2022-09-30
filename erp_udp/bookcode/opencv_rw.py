@@ -2,8 +2,13 @@ from inspect import ismethoddescriptor
 import cv2
 import numpy as np
 
+# path와 이미지이름 변수화
 path = "D:/dev/wego-project/erp_udp/bookcode/"
 image = "lena512.bmp"
+
+# 영상 불러오기
+color = cv2.imread(path+image,1)
+gray = cv2.imread(path+image,0)
 
 height = 480
 width = 640
@@ -20,9 +25,7 @@ cv2.imshow("color",color)
 cv2.waitKey()
 cv2.destroyAllWindows()
     
-# 영상 불러오기
-color = cv2.imread(path+image,1)
-gray = cv2.imread(path+image,0)
+
 
 # 영상 디스플레이
 cv2.imshow("color",color)
