@@ -62,13 +62,14 @@ cv2.imshow("perspective transformation", p_dst)
 cv2.waitKey()
 cv2.destroyAllWindows()
 
+
+# display 용
 rst1 = cv2.hconcat([src,a_dst])
 rst2 = cv2.hconcat([src,p_dst])
 
 srcp = (srcPoint.astype(int)).tolist()
 dstp = (dstPoint.astype(int)).tolist()
 
-# print(type(spoint[0]))
 for sp,dp in zip(srcp,dstp):
     print(srcp.index(sp))
     if srcp.index(sp) < 4:
