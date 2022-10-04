@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-path = "D:/dev/wego-project/erp_udp/bookcode/"
+path = "D:/dev/wego-project/erp_udp/bookcode/img"
 image = "hsv.png"
 win_name = "color_detect_hsv"
 
@@ -43,7 +43,7 @@ def hsv_track(frame):
 
 if __name__ == "__main__":
     # 영상 불러오기
-    color = cv2.resize(cv2.imread(path+image,1),(400,300))
+    color = cv2.resize(cv2.imread(path+image,1),(500,300))
 
     #########track bar############
     create_trackbar_init()

@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # path와 이미지이름 변수화
-path = "D:/dev/wego-project/erp_udp/bookcode/"
+path = "D:/dev/wego-project/erp_udp/bookcode/img"
 image = "lena512.bmp"
 
 # 영상 불러오기

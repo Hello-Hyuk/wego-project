@@ -75,11 +75,9 @@ for sp,dp in zip(srcp,dstp):
     if srcp.index(sp) < 4:
         cv2.line(rst2,(sp[0],sp[1]),(dp[0]+width,dp[1]),[0,0,255],5)
     if srcp.index(sp) < 3:
-        print("A")
         cv2.line(rst1,(sp[0],sp[1]),(dp[0]+width,dp[1]),[0,0,255],5)
     
 cv2.imshow("affine transformation", rst1)
 cv2.imshow("perspective transformation", rst2)
 cv2.waitKey()
 cv2.destroyAllWindows()
-
