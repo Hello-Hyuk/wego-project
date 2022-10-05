@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import math
-from common_util import RotationMatrix, TranslationMatrix
+from lib.common_util import RotationMatrix, TranslationMatrix
 
 import socket
 import threading
@@ -12,7 +12,7 @@ class UDP_LIDAR_Parser :
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_address = (ip,port)
         self.sock.bind(recv_address)
-
+        
         self.data_size=params_lidar["Block_SIZE"]
         
         if params_lidar["CHANNEL"]==int(16):
@@ -26,7 +26,6 @@ class UDP_LIDAR_Parser :
             self.VerticalAngleDeg = np.array([[-30.67,-9.33,-29.33,-8.0,-28.0,-6.67,-26.67,-5.33,-25.33,-4,-24,-2.67,-22.67,-1.33,-21.33,
                                     0.0,-20.,1.33,-18.67,2.67,-17.33,4,-16,5.33,-14.67,6.67,-13.33,8,-12,9.33,-10.67,10.67]])
 
-
         self.is_lidar=False
         thread = threading.Thread(target=self.loop)
         thread.daemon = True 
@@ -34,7 +33,7 @@ class UDP_LIDAR_Parser :
     
     def loop(self):
         while True:
-            self.x,self.y,self.z,self.Intensity=self.recv_udp_data()
+            self.x,self.y,self.z,self.Intensity,self.Distance=self.recv_udp_data()
             # lidar_result(x,y,z,Intensity)
             self.is_lidar=True
 
@@ -70,7 +69,7 @@ class UDP_LIDAR_Parser :
 
         x, y, z = self.sph2cart(Distance, Azimuth)
 
-        return x, y, z, Intensity
+        return x, y, z, Intensity, Distance
 
     def sph2cart(self, R, a):
 
@@ -118,9 +117,8 @@ def transformMTX_lidar2cam(params_lidar, params_cam):
     print('t : \n')
 
     print(R_T[:3,3])
-    R_T_inv= np.linalg.inv(R_T)  
 
-    return R_T, R_T_inv
+    return R_T
 
 
 def project2img_mtx(params_cam):
@@ -145,7 +143,6 @@ def project2img_mtx(params_cam):
 
     return R_f
 
-
 class LIDAR2CAMTransform:
     def __init__(self, params_cam, params_lidar):
 
@@ -156,7 +153,6 @@ class LIDAR2CAMTransform:
         self.m = float(params_cam["HEIGHT"])
 
         self.RT = transformMTX_lidar2cam(params_lidar, params_cam)
-
         self.proj_mtx = project2img_mtx(params_cam)
 
     def transform_lidar2cam(self, xyz_p):
@@ -210,8 +206,6 @@ class LIDAR2CAMTransform:
 
         return xyi
 
-
-
 def make_intens_img(xi, yi, intens, img_w, img_h, intens_max, clr_map):
     '''
     place the lidar points into numpy arrays in order to make distance map
@@ -233,3 +227,38 @@ def make_intens_img(xi, yi, intens, img_w, img_h, intens_max, clr_map):
 
     return point_np
 
+
+def distance_write_csv(distance, sdist):
+    output_file = 'log_lidar.csv'
+    output_file_slice = 'log_lidar_slice.csv'
+    
+    with open(output_file, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for line in distance:
+            csvfile.write(str(line) + '\n')             
+        
+    with open(output_file_slice, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for line in sdist:
+            csvfile.write(str(line) + '\n')             
+
+def point_write_csv(points):
+    output_file_x = 'log_lidar_point_x.csv'
+    output_file_y = 'log_lidar_point_y.csv'
+    output_file_z = 'log_lidar_point_z.csv'
+    
+    with open(output_file_x, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for x in points[0]:
+            csvfile.write(str(x) + '\n')   
+                      
+    with open(output_file_y, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for y in points[1]:
+            csvfile.write(str(y) + '\n')      
+                   
+    with open(output_file_z, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for z in points[2]:
+            csvfile.write(str(z) + '\n')             
+        

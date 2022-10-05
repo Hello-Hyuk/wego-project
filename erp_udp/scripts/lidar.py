@@ -1,9 +1,10 @@
+from dis import dis
 import socket
 import cv2
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from lib.lidar_util import UDP_LIDAR_Parser
+from lib.lidar_util import *
 import os,json
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
@@ -42,43 +43,32 @@ def main():
             y=udp_lidar.y
             z=udp_lidar.z
             intensity=udp_lidar.Intensity
-            distance = udp_lidar.Distance
-
+            distance=udp_lidar.Distance
+            print("raw point x",x.shape)
+            print(f"reshape point x {(x.reshape([-1, 1])).shape}")
             points = np.concatenate([
                 x.reshape([-1, 1]),
                 y.reshape([-1, 1]),
                 z.reshape([-1, 1])
             ], axis=1).T.astype(np.float32)
-
             # raw point cloud (57600, 3)
             channel_list = udp_lidar.VerticalAngleDeg
             channel_select = -15
             channel_idx = np.where(channel_list == channel_select)
+            print("channel indexfull",channel_idx)
+            print("channel index[1][0]",channel_idx[1][0])
             
             sdist = distance[channel_idx,:]
+            spoints = points[channel_idx,:]
+            
             # slice channel
             sliced = intensity[channel_idx[1][0]::params_lidar['CHANNEL']]
-     
-            output_file = 'log_lidar.csv'
-            output_file_slice = 'log_lidar_slice.csv'
+            #point_write_csv(spoints)
             
-            with open(output_file, 'wt', newline='\r\n', encoding='UTF-8') as csvfile:
-                # for line in points.T:
-                for line in distance:
-                    csvfile.write(str(line) + '\n')             
-                
-            with open(output_file_slice, 'wt', newline='\r\n', encoding='UTF-8') as csvfile:
-                # for line in points.T:
-                for line in sdist:
-                    csvfile.write(str(line) + '\n')             
-                break
-
             print(udp_lidar.VerticalAngleDeg)
-            print('raw point shape',(points.T).shape)
-            print('count per 1 degree',(points.T).shape[0]/360)
-            print(points.T)
-  
-            
+            print('raw distance shape',(distance).shape)
+            print('raw intensity shape',(intensity).shape)
+        
 if __name__ == '__main__':
 
     main()

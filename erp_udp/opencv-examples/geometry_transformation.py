@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-src = cv2.imread("D:\dev\wego-project\erp_udp/bookcode\lena512.bmp", 1)
+src = cv2.imread("D:\dev\wego-project\erp_udp/bookcode\img/lena512.bmp", 1)
 
 height, width, channel = src.shape
 
