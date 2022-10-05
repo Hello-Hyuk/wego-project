@@ -33,7 +33,7 @@ class UDP_LIDAR_Parser :
     
     def loop(self):
         while True:
-            self.x,self.y,self.z,self.Intensity,self.Distance=self.recv_udp_data()
+            self.x,self.y,self.z,self.Intensity,self.Distance,self.Azimuth=self.recv_udp_data()
             # lidar_result(x,y,z,Intensity)
             self.is_lidar=True
 
@@ -64,12 +64,24 @@ class UDP_LIDAR_Parser :
 
         # reshape outputs based on 16 channels
         Azimuth = Azimuth.reshape([-1, 1])/100
+        
         Distance = Distance.reshape([-1, self.channel])/1000
         Intensity = Intensity.reshape([-1])
 
         x, y, z = self.sph2cart(Distance, Azimuth)
-
-        return x, y, z, Intensity, Distance
+        # print(f"shape : {Azimuth.shape}")
+        # print(f"max count : {np.count_nonzero(Azimuth == np.max(Azimuth))}")
+        # assert np.count_nonzero(Azimuth == np.max(Azimuth)) == 2
+        # print(f"max : {np.max(Azimuth)}")
+        # print(f"min : {np.min(Azimuth)}")
+        
+        # print(f"init Azimuth: {Azimuth[0]*10}")
+        # print(f"Azimuth before: {Azimuth[:2]}")
+        # # Azimuth = np.roll(Azimuth, (int(Azimuth[0]*10)), axis=0)
+        # Azimuth = np.roll(Azimuth, -1, axis=0)
+        # print(f"Azimuth after: {Azimuth[:2]}")
+        
+        return x, y, z, Intensity, Distance, Azimuth[0]
 
     def sph2cart(self, R, a):
 
