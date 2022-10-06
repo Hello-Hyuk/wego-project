@@ -7,6 +7,8 @@ import matplotlib.pyplot  as plt
 from lib.common_util import RotationMatrix, TranslationMatrix
 import socket
 import threading
+import open3d as o3d
+
 class UDP_LIDAR_Parser :
     
     def __init__(self, ip, port, params_lidar=None):
@@ -92,47 +94,56 @@ class UDP_LIDAR_Parser :
         print('del')
         
 def ROI_filtering(height, width, points):
+    # z ROI
     points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
     points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
-    
+    # y ROI
     points = np.delete(points,np.where(points[1,:]>height),axis=1)
     points = np.delete(points,np.where(points[1,:]<1),axis=1)
-    
+    # x ROI
     points = np.delete(points,np.where(points[0,:]>width),axis=1)
     points = np.delete(points,np.where(points[0,:]<-width),axis=1)
     return points
 
 def DBscan(points):
-    # create model and prediction
+    # dbscan을 통한 clustering 진행
     centroid, labels = dbscan(points, eps=1.0, min_samples=10)
+    
+    # label중 -1을 제외한 나머지는 정상적으로 clustering된 것들
+    # -1을 제외한 label의 각 index를 찾아 실제 x,y,z값을 추출 한뒤,
+    # 평균을 내어 하나의 점을 추출한다. 클러스터당 1개의 점
     center_point = []
     for label in range(len(set(labels[labels!=-1]))):
         idx = np.where(labels==label)
         center_point.append(get_center_point(points,idx))
-        
+    
+    # label 종류 확인
     print(set(labels))
-    # Number of clusters in labels, ignoring noise if present.
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
+    # 클러스터의 개수와 노이즈로 분리된 포인트의 개수 출력
+    n_clusters = len(set(labels[labels!=-1]))
+    n_noise = list(labels).count(-1)
     
     # labelcount = len(np.unique(labels))
-    print("Estimated number of clusters: %d" % n_clusters_)
-    print("Estimated number of noise points: %d" % n_noise_)
+    print("Estimated number of clusters: %d" % n_clusters)
+    print("Estimated number of noise points: %d" % n_noise)
+    
     return center_point
 
 def get_center_point(points,idx):
+    # points에서 clustering된 idx의 point들을 추출하고,
+    # col 기준으로 x,y,z 평균내기
     point = np.mean(points[idx,:],axis=1)
     return point
     
-def printData(obj_data, position_x, position_y, position_z, center_points_np, ego_np):
+def printData(obj_data, position_x, position_y, position_z, center_points_np, ego_np):    
     # print(f"ego : {position_x,position_y,position_z}")
     print(f"lidar object point :\n {center_points_np}")
     print(f"simulation object point from lidar :\n {center_points_np+ego_np}")
     # print(f"obj data: {obj_data[0]}")
 
-def Dis_PointCloud(points,geom):
+def Dis_PointCloud(points):
     # display points by open3d
-    #geom = o3d.geometry.PointCloud()
+    geom = o3d.geometry.PointCloud()
     geom.points = o3d.utility.Vector3dVector(points.T)
     o3d.visualization.draw_geometries([geom])
 
