@@ -19,7 +19,7 @@ user_ip = params["user_ip"]
 lidar_port = params["lidar_dst_port"]
 
 params_lidar = {
-    "Range" : 30, #min & max range of lidar azimuths
+    "Range" : 90.0, #min & max range of lidar azimuths
     "CHANNEL" :16, #verticla channel of a lidar
     "localIP": user_ip,
     "localPort": lidar_port,
@@ -56,13 +56,13 @@ def main():
                 z.reshape([-1, 1])
             ], axis=1).T.astype(np.float32)
             
-            points = np.delete(points,np.where(points[2,:]<0),axis=1)
+            # points = np.delete(points,np.where(points[2,:]<0),axis=1)
             
-            points = np.delete(points,np.where(points[1,:]>height),axis=1)
-            points = np.delete(points,np.where(points[1,:]<0),axis=1)
+            # points = np.delete(points,np.where(points[1,:]>height),axis=1)
+            # points = np.delete(points,np.where(points[1,:]<0),axis=1)
             
-            points = np.delete(points,np.where(points[0,:]>width),axis=1)
-            points = np.delete(points,np.where(points[0,:]<-width),axis=1)
+            # points = np.delete(points,np.where(points[0,:]>width),axis=1)
+            # points = np.delete(points,np.where(points[0,:]<-width),axis=1)
     
             #raw point cloud (57600, 3)
             # print(points[:azimuth])

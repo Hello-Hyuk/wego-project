@@ -14,7 +14,7 @@ class UDP_LIDAR_Parser :
         self.sock.bind(recv_address)
         
         self.data_size=params_lidar["Block_SIZE"]
-        
+        self.range = params_lidar["Range"]
         if params_lidar["CHANNEL"]==int(16):
             self.channel = int(16)
             self.max_len = 150
@@ -68,18 +68,12 @@ class UDP_LIDAR_Parser :
         Distance = Distance.reshape([-1, self.channel])/1000
         Intensity = Intensity.reshape([-1])
 
-        x, y, z = self.sph2cart(Distance, Azimuth)
-        # print(f"shape : {Azimuth.shape}")
-        # print(f"max count : {np.count_nonzero(Azimuth == np.max(Azimuth))}")
-        # assert np.count_nonzero(Azimuth == np.max(Azimuth)) == 2
-        # print(f"max : {np.max(Azimuth)}")
-        # print(f"min : {np.min(Azimuth)}")
+        # filtring with azimuth
+        azi_idx_range = np.where((Azimuth[:,0]<360.0-self.range) & (Azimuth[:,0]>self.range))
+        Azimuth = np.delete(Azimuth,azi_idx_range,axis=0)
+        Distance = np.delete(Distance,azi_idx_range,axis=0)
         
-        # print(f"init Azimuth: {Azimuth[0]*10}")
-        # print(f"Azimuth before: {Azimuth[:2]}")
-        # # Azimuth = np.roll(Azimuth, (int(Azimuth[0]*10)), axis=0)
-        # Azimuth = np.roll(Azimuth, -1, axis=0)
-        # print(f"Azimuth after: {Azimuth[:2]}")
+        x, y, z = self.sph2cart(Distance, Azimuth)
         
         return x, y, z, Intensity, Distance, Azimuth[0]
 
