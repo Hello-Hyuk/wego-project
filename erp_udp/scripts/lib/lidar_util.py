@@ -92,7 +92,8 @@ class UDP_LIDAR_Parser :
         print('del')
         
 def ROI_filtering(height, width, points):
-    points = np.delete(points,np.where(points[2,:]<0),axis=1)
+    points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
+    points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
     
     points = np.delete(points,np.where(points[1,:]>height),axis=1)
     points = np.delete(points,np.where(points[1,:]<1),axis=1)
@@ -103,21 +104,18 @@ def ROI_filtering(height, width, points):
 
 def DBscan(points):
     # create model and prediction
-    centroid, labels = dbscan(points, eps=1.0, min_samples=1)
-    print(f"centroid : {centroid.shape}\n labels : {len(set(labels))}")
-    
+    centroid, labels = dbscan(points, eps=1.0, min_samples=10)
     center_point = []
-    for label in range(len(set(labels))):
+    for label in range(len(set(labels[labels!=-1]))):
         idx = np.where(labels==label)
         center_point.append(get_center_point(points,idx))
         
-    labelcount = len(np.unique(labels))
-    print(f"cluster count : {labelcount}")
     print(set(labels))
     # Number of clusters in labels, ignoring noise if present.
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise_ = list(labels).count(-1)
     
+    # labelcount = len(np.unique(labels))
     print("Estimated number of clusters: %d" % n_clusters_)
     print("Estimated number of noise points: %d" % n_noise_)
     return center_point
@@ -126,7 +124,11 @@ def get_center_point(points,idx):
     point = np.mean(points[idx,:],axis=1)
     return point
     
-
+def printData(obj_data, position_x, position_y, position_z, center_points_np, ego_np):
+    # print(f"ego : {position_x,position_y,position_z}")
+    print(f"lidar object point :\n {center_points_np}")
+    print(f"simulation object point from lidar :\n {center_points_np+ego_np}")
+    # print(f"obj data: {obj_data[0]}")
 
 
 def transformMTX_lidar2cam(params_lidar, params_cam):

@@ -34,13 +34,13 @@ full_path = path+'/'+path_file_name
 full_path_slice = path+'/'+path_file_slice
 f=open(full_path, 'w')
 f=open(full_path_slice, 'w')
-
+np.set_printoptions(precision=5)
 def main():
     cnt = 0
     udp_lidar = UDP_LIDAR_Parser(ip=params_lidar["localIP"], port=params_lidar["localPort"], params_lidar=params_lidar)
     obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')
     ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
-    height = 30
+    height = 18
     width = 6
     while True :
         if udp_lidar.is_lidar ==True:
@@ -55,9 +55,9 @@ def main():
             obj_width = obj_data[0][6]     
             ######## ego info
             status_data = ego.get_data()
-            position_x=status_data[12]
-            position_y=status_data[13]
-            position_z=status_data[14]
+            position_x=round(status_data[12],5)
+            position_y=round(status_data[13],5)
+            position_z=round(status_data[14],5)
             ######## lidar data
             x=udp_lidar.x
             y=udp_lidar.y
@@ -83,18 +83,17 @@ def main():
                 center_points = DBscan(points.T)
                 center_points_np = np.array(center_points)
                 center_points_np = np.squeeze(center_points)
+                ego_np = np.array([position_x,position_y,position_z])
                 
-                print(f"object center point : {center_points_np}")
-                
-                #error
-                print(f"object w/h {obj_width}/{obj_height}")
-                print(f"ERROR_front\nx:{abs(sim_x-center_points_np[0])}\ny:{abs(sim_y-center_points_np[1]-(obj_width/2))}\nz:{abs(sim_z-center_points_np[2])}\n")
-                
+
+                printData(obj_data, position_x, position_y, position_z, center_points_np, ego_np)
+                time.sleep(1)
                 # display points by open3d
-                geom = o3d.geometry.PointCloud()
-                geom.points = o3d.utility.Vector3dVector(points.T)
-                o3d.visualization.draw_geometries([geom])
+                # geom = o3d.geometry.PointCloud()
+                # geom.points = o3d.utility.Vector3dVector(points.T)
+                # o3d.visualization.draw_geometries([geom])
             else : pass
+
             # object center point : [array([[0.06382457, 6.8654494 , 0.59186614]], dtype=float32)]
             
             # channel_list = udp_lidar.VerticalAngleDeg
