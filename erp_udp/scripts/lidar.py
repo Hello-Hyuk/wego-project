@@ -6,6 +6,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from lib.lidar_util import *
+from lib.morai_udp_parser import udp_parser
 import os,json
 import open3d as o3d
 
@@ -37,17 +38,37 @@ f=open(full_path_slice, 'w')
 def main():
     cnt = 0
     udp_lidar = UDP_LIDAR_Parser(ip=params_lidar["localIP"], port=params_lidar["localPort"], params_lidar=params_lidar)
+    obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')
+    ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
     height = 30
     width = 6
     while True :
-
-        if udp_lidar.is_lidar ==True:            
+        if udp_lidar.is_lidar ==True:
+            # data parsing
+            ######## obj info
+            #obj_info_list = [obj_id, obj_type, pos_x, pos_y, pos_z, heading, size_x, size_y, size_z
+            obj_data=obj.get_data()
+            obj_x=obj_data[0][2]
+            obj_y=obj_data[0][3]
+            obj_z=obj_data[0][4]
+            obj_height = obj_data[0][7]
+            obj_width = obj_data[0][6]     
+            ######## ego info
+            status_data = ego.get_data()
+            position_x=status_data[12]
+            position_y=status_data[13]
+            position_z=status_data[14]
+            ######## lidar data
             x=udp_lidar.x
             y=udp_lidar.y
             z=udp_lidar.z
             intensity=udp_lidar.Intensity
             distance=udp_lidar.Distance
 
+            sim_x = obj_x-position_x
+            sim_y = obj_y-position_y
+            sim_z = obj_z-position_z
+            #print(f"sim point\n x:{sim_x}\ny:{sim_y}\nz:{sim_z}\n")
             points = np.concatenate([
                 x.reshape([-1, 1]),
                 y.reshape([-1, 1]),
@@ -57,16 +78,25 @@ def main():
             
             # point ROI
             points = ROI_filtering(height, width, points)
-            print(points.shape)
-
-            # center_points = DBscan(points.T)
-            # print(f"object center point : {center_points}")
-
-            # display points by open3d
-            geom = o3d.geometry.PointCloud()
-            geom.points = o3d.utility.Vector3dVector(points.T)
-            o3d.visualization.draw_geometries([geom])
-            break
+            
+            if points in points:
+                center_points = DBscan(points.T)
+                center_points_np = np.array(center_points)
+                center_points_np = np.squeeze(center_points)
+                
+                print(f"object center point : {center_points_np}")
+                
+                #error
+                print(f"object w/h {obj_width}/{obj_height}")
+                print(f"ERROR_front\nx:{abs(sim_x-center_points_np[0])}\ny:{abs(sim_y-center_points_np[1]-(obj_width/2))}\nz:{abs(sim_z-center_points_np[2])}\n")
+                
+                # display points by open3d
+                geom = o3d.geometry.PointCloud()
+                geom.points = o3d.utility.Vector3dVector(points.T)
+                o3d.visualization.draw_geometries([geom])
+            else : pass
+            # object center point : [array([[0.06382457, 6.8654494 , 0.59186614]], dtype=float32)]
+            
             # channel_list = udp_lidar.VerticalAngleDeg
             # channel_select = -15
             # channel_idx = np.where(channel_list == channel_select)
