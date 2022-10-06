@@ -1,8 +1,10 @@
 import cv2
 import numpy as np
 import math
+from sklearn.cluster import dbscan
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot  as plt
 from lib.common_util import RotationMatrix, TranslationMatrix
-
 import socket
 import threading
 class UDP_LIDAR_Parser :
@@ -69,9 +71,9 @@ class UDP_LIDAR_Parser :
         Intensity = Intensity.reshape([-1])
 
         # filtring with azimuth
-        azi_idx_range = np.where((Azimuth[:,0]<360.0-self.range) & (Azimuth[:,0]>self.range))
-        Azimuth = np.delete(Azimuth,azi_idx_range,axis=0)
-        Distance = np.delete(Distance,azi_idx_range,axis=0)
+        # azi_idx_range = np.where((Azimuth[:,0]<360.0-self.range) & (Azimuth[:,0]>self.range))
+        # Azimuth = np.delete(Azimuth,azi_idx_range,axis=0)
+        # Distance = np.delete(Distance,azi_idx_range,axis=0)
         
         x, y, z = self.sph2cart(Distance, Azimuth)
         
@@ -88,6 +90,43 @@ class UDP_LIDAR_Parser :
     def __del__(self):
         self.sock.close()
         print('del')
+        
+def ROI_filtering(height, width, points):
+    points = np.delete(points,np.where(points[2,:]<0),axis=1)
+    
+    points = np.delete(points,np.where(points[1,:]>height),axis=1)
+    points = np.delete(points,np.where(points[1,:]<1),axis=1)
+    
+    points = np.delete(points,np.where(points[0,:]>width),axis=1)
+    points = np.delete(points,np.where(points[0,:]<-width),axis=1)
+    return points
+
+def DBscan(points):
+    # create model and prediction
+    centroid, labels = dbscan(points, eps=1.0, min_samples=1)
+    print(f"centroid : {centroid.shape}\n labels : {len(set(labels))}")
+    
+    center_point = []
+    for label in range(len(set(labels))):
+        idx = np.where(labels==label)
+        center_point.append(get_center_point(points,idx))
+        
+    labelcount = len(np.unique(labels))
+    print(f"cluster count : {labelcount}")
+    print(set(labels))
+    # Number of clusters in labels, ignoring noise if present.
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    n_noise_ = list(labels).count(-1)
+    
+    print("Estimated number of clusters: %d" % n_clusters_)
+    print("Estimated number of noise points: %d" % n_noise_)
+    return center_point
+
+def get_center_point(points,idx):
+    point = np.mean(points[idx,:],axis=1)
+    return point
+    
+
 
 
 def transformMTX_lidar2cam(params_lidar, params_cam):
