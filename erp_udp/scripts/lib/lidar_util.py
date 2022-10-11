@@ -1,10 +1,14 @@
 import cv2
 import numpy as np
 import math
-from common_util import RotationMatrix, TranslationMatrix
-
+from sklearn.cluster import dbscan
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot  as plt
+from lib.common_util import RotationMatrix, TranslationMatrix
 import socket
 import threading
+import open3d as o3d
+
 class UDP_LIDAR_Parser :
     
     def __init__(self, ip, port, params_lidar=None):
@@ -12,9 +16,9 @@ class UDP_LIDAR_Parser :
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_address = (ip,port)
         self.sock.bind(recv_address)
-
-        self.data_size=params_lidar["Block_SIZE"]
         
+        self.data_size=params_lidar["Block_SIZE"]
+        self.range = params_lidar["Range"]
         if params_lidar["CHANNEL"]==int(16):
             self.channel = int(16)
             self.max_len = 150
@@ -26,7 +30,6 @@ class UDP_LIDAR_Parser :
             self.VerticalAngleDeg = np.array([[-30.67,-9.33,-29.33,-8.0,-28.0,-6.67,-26.67,-5.33,-25.33,-4,-24,-2.67,-22.67,-1.33,-21.33,
                                     0.0,-20.,1.33,-18.67,2.67,-17.33,4,-16,5.33,-14.67,6.67,-13.33,8,-12,9.33,-10.67,10.67]])
 
-
         self.is_lidar=False
         thread = threading.Thread(target=self.loop)
         thread.daemon = True 
@@ -34,7 +37,7 @@ class UDP_LIDAR_Parser :
     
     def loop(self):
         while True:
-            self.x,self.y,self.z,self.Intensity=self.recv_udp_data()
+            self.x,self.y,self.z,self.Intensity,self.Distance,self.Azimuth=self.recv_udp_data()
             # lidar_result(x,y,z,Intensity)
             self.is_lidar=True
 
@@ -65,12 +68,18 @@ class UDP_LIDAR_Parser :
 
         # reshape outputs based on 16 channels
         Azimuth = Azimuth.reshape([-1, 1])/100
+        
         Distance = Distance.reshape([-1, self.channel])/1000
         Intensity = Intensity.reshape([-1])
 
+        # filtring with azimuth
+        # azi_idx_range = np.where((Azimuth[:,0]<360.0-self.range) & (Azimuth[:,0]>self.range))
+        # Azimuth = np.delete(Azimuth,azi_idx_range,axis=0)
+        # Distance = np.delete(Distance,azi_idx_range,axis=0)
+        
         x, y, z = self.sph2cart(Distance, Azimuth)
-
-        return x, y, z, Intensity
+        
+        return x, y, z, Intensity, Distance, Azimuth[0]
 
     def sph2cart(self, R, a):
 
@@ -83,7 +92,62 @@ class UDP_LIDAR_Parser :
     def __del__(self):
         self.sock.close()
         print('del')
+        
+def ROI_filtering(height, width, points):
+    # z ROI
+    points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
+    points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
+    # y ROI
+    points = np.delete(points,np.where(points[1,:]>height),axis=1)
+    points = np.delete(points,np.where(points[1,:]<1),axis=1)
+    # x ROI
+    points = np.delete(points,np.where(points[0,:]>width),axis=1)
+    points = np.delete(points,np.where(points[0,:]<-width),axis=1)
+    return points
 
+def DBscan(points):
+    # dbscan을 통한 clustering 진행
+    centroid, labels = dbscan(points, eps=1.0, min_samples=10)
+    
+    # label중 -1을 제외한 나머지는 정상적으로 clustering된 것들
+    # -1을 제외한 label의 각 index를 찾아 실제 x,y,z값을 추출 한뒤,
+    # 평균을 내어 하나의 점을 추출한다. 클러스터당 1개의 점
+    center_point = []
+    for label in range(len(set(labels[labels!=-1]))):
+        idx = np.where(labels==label)
+        center_point.append(get_center_point(points,idx))
+    
+    # label 종류 확인
+    print(set(labels))
+    # 클러스터의 개수와 노이즈로 분리된 포인트의 개수 출력
+    n_clusters = len(set(labels[labels!=-1]))
+    n_noise = list(labels).count(-1)
+    
+    # labelcount = len(np.unique(labels))
+    print("Estimated number of clusters: %d" % n_clusters)
+    print("Estimated number of noise points: %d" % n_noise)
+    
+    return center_point
+
+def get_center_point(points,idx):
+    # points에서 clustering된 idx의 point들을 추출하고,
+    # col 기준으로 x,y,z 평균내기
+    point = np.mean(points[idx,:],axis=1)
+    return point
+    
+def printData(obj_data, position_x, position_y, position_z, center_points_np, ego_np):    
+    # print(f"ego : {position_x,position_y,position_z}")
+    print(f"lidar object point :\n {center_points_np}")
+    print(f"simulation object point from lidar :\n {center_points_np+ego_np}")
+    # print(f"obj data: {obj_data[0]}")
+
+def Dis_PointCloud(points,geom):
+    # display points by open3d
+    #geom = o3d.geometry.PointCloud()
+    geom.points = o3d.utility.Vector3dVector(points.T)
+    o3d.visualization.draw_geometries([geom])
+
+# def Dis_rect(points)
 
 def transformMTX_lidar2cam(params_lidar, params_cam):
     '''
@@ -118,9 +182,8 @@ def transformMTX_lidar2cam(params_lidar, params_cam):
     print('t : \n')
 
     print(R_T[:3,3])
-    R_T_inv= np.linalg.inv(R_T)  
 
-    return R_T, R_T_inv
+    return R_T
 
 
 def project2img_mtx(params_cam):
@@ -145,7 +208,6 @@ def project2img_mtx(params_cam):
 
     return R_f
 
-
 class LIDAR2CAMTransform:
     def __init__(self, params_cam, params_lidar):
 
@@ -156,7 +218,6 @@ class LIDAR2CAMTransform:
         self.m = float(params_cam["HEIGHT"])
 
         self.RT = transformMTX_lidar2cam(params_lidar, params_cam)
-
         self.proj_mtx = project2img_mtx(params_cam)
 
     def transform_lidar2cam(self, xyz_p):
@@ -210,8 +271,6 @@ class LIDAR2CAMTransform:
 
         return xyi
 
-
-
 def make_intens_img(xi, yi, intens, img_w, img_h, intens_max, clr_map):
     '''
     place the lidar points into numpy arrays in order to make distance map
@@ -233,3 +292,38 @@ def make_intens_img(xi, yi, intens, img_w, img_h, intens_max, clr_map):
 
     return point_np
 
+
+def distance_write_csv(distance, sdist):
+    output_file = 'log_lidar.csv'
+    output_file_slice = 'log_lidar_slice.csv'
+    
+    with open(output_file, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for line in distance:
+            csvfile.write(str(line) + '\n')             
+        
+    with open(output_file_slice, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for line in sdist:
+            csvfile.write(str(line) + '\n')             
+
+def point_write_csv(points):
+    output_file_x = 'log_lidar_point_x.csv'
+    output_file_y = 'log_lidar_point_y.csv'
+    output_file_z = 'log_lidar_point_z.csv'
+    
+    with open(output_file_x, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for x in points[0]:
+            csvfile.write(str(x) + '\n')   
+                      
+    with open(output_file_y, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for y in points[1]:
+            csvfile.write(str(y) + '\n')      
+                   
+    with open(output_file_z, 'w', newline='\r\n', encoding='UTF-8') as csvfile:
+        # for line in points.T:
+        for z in points[2]:
+            csvfile.write(str(z) + '\n')             
+        
