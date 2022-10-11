@@ -14,21 +14,13 @@ class udp_sensor_parser :
         thread = threading.Thread(target=self.recv_udp_data)
         thread.daemon = True 
         thread.start() 
-
-    
-
+        
     def recv_udp_data(self):
         while True :
-            
             raw_data, sender = self.sock.recvfrom(self.data_size)
             self.data_parsing(raw_data)
 
-
-
-
     def data_parsing(self,raw_data) :
-   
-
         if self.data_type=='imu' :
             header=raw_data[0:9].decode()
             
@@ -36,7 +28,6 @@ class udp_sensor_parser :
                 data_length=struct.unpack('i',raw_data[9:13])
                 imu_data=struct.unpack('10d',raw_data[25:105])
                 self.parsed_data=imu_data
-
         
     def __del__(self):
         self.sock.close()

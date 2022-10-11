@@ -20,8 +20,6 @@ class UDP_GPS_Parser :
             raw_data, sender = self.sock.recvfrom(self.data_size)
             self.data_parsing(raw_data)
 
-
-
     def data_parsing(self,raw_data) :
         raw_str=raw_data.decode()
         split_str=raw_str.split(",")
@@ -38,8 +36,6 @@ class UDP_GPS_Parser :
                 longitude=int(float(split_str[4])/100)+(float(split_str[4])%100)/60
                 self.parsed_data=[latitude,longitude]
        
-                
-
     def get_data(self) :
         return self.parsed_data
 
