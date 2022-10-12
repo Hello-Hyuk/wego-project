@@ -14,7 +14,6 @@ class UDP_GPS_Parser :
         thread.daemon = True 
         thread.start() 
 
-
     def recv_udp_data(self):
         while True :
             raw_data, sender = self.sock.recvfrom(self.data_size)
