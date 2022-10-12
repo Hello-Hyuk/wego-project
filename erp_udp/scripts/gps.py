@@ -24,8 +24,6 @@ class GPS():
         self.gps_parser=UDP_GPS_Parser(user_ip, gps_port,'GPRMC')
         self.x = 0.0
         self.y = 0.0
-        self.heading = 0.0
-        self.hAcc = 0
         self.lat, self.lon, self.alt = base["lat"],base["lon"],base["alt"]
 
     def gps_call_back(self):
@@ -43,13 +41,13 @@ def main():
             
             ######## ego info
             status_data = ego.get_data()
+            gps.gps_call_back()
+            
             position_x=round(status_data[12],5)
             position_y=round(status_data[13],5)
             position_z=round(status_data[14],5)
             heading = round(status_data[17],5)
             
-            gps.gps_call_back()
-                       
             print('sim x : {0} , y : {1}, heading : {2}'.format(position_x,position_y,heading))
             print('my x : {0} , y : {1}'.format(gps.x,gps.y))
             print('Lat : {0} , Long : {1}'.format(gps.gps_parser.parsed_data[0], gps.gps_parser.parsed_data[1]))

@@ -1,12 +1,10 @@
 
-from torch import rad2deg
 from lib.imu_util import udp_sensor_parser, Quaternion2Euler
 from lib.morai_udp_parser import udp_parser
 import time
 import threading
 import os,json
 import numpy as np
-from math import atan2, asin
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
 
@@ -48,7 +46,6 @@ def main():
         time.sleep(0.1)
 
 if __name__ == '__main__':
-
     main()
 
  
