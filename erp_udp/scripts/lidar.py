@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from lib.lidar_util import *
+from lib.lidar_util import UDP_LIDAR_Parser, ROI_filtering, DBscan, get_center_point, Dis_PointCloud, printData
 from lib.morai_udp_parser import udp_parser
 import os,json
 
@@ -46,17 +46,17 @@ def main():
             # data parsing
             ######## obj info
             #obj_info_list = [obj_id, obj_type, pos_x, pos_y, pos_z, heading, size_x, size_y, size_z
-            obj_data=obj.get_data()
-            obj_x=obj_data[0][2]
-            obj_y=obj_data[0][3]
-            obj_z=obj_data[0][4]
-            obj_height = obj_data[0][7]
-            obj_width = obj_data[0][6]     
+            # obj_data=obj.get_data()
+            # obj_x=obj_data[0][2]
+            # obj_y=obj_data[0][3]
+            # obj_z=obj_data[0][4]
+            # obj_height = obj_data[0][7]
+            # obj_width = obj_data[0][6]     
             ######## ego info
-            status_data = ego.get_data()
-            position_x=round(status_data[12],5)
-            position_y=round(status_data[13],5)
-            position_z=round(status_data[14],5)
+            # status_data = ego.get_data()
+            # position_x=round(status_data[12],5)
+            # position_y=round(status_data[13],5)
+            # position_z=round(status_data[14],5)
             ######## lidar data
             x=udp_lidar.x
             y=udp_lidar.y
@@ -70,7 +70,7 @@ def main():
                 z.reshape([-1, 1])
             ], axis=1).T.astype(np.float32)
             #raw point cloud (57600, 3)
-            
+            print(points)
             # point ROI 기반 filtering 진행
             points = ROI_filtering(height, width, points)
             

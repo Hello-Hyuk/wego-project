@@ -7,7 +7,7 @@ import matplotlib.pyplot  as plt
 from lib.common_util import RotationMatrix, TranslationMatrix
 import socket
 import threading
-import open3d as o3d
+# import open3d as o3d
 
 class UDP_LIDAR_Parser :
     
@@ -81,12 +81,12 @@ class UDP_LIDAR_Parser :
         
         return x, y, z, Intensity, Distance, Azimuth[0]
 
-    def sph2cart(self, R, a):
+    def sph2cart(self, R, Azimuth):
 
-        x = R * np.cos(np.deg2rad(self.VerticalAngleDeg)) * np.sin(np.deg2rad(a))
-        y = R * np.cos(np.deg2rad(self.VerticalAngleDeg)) * np.cos(np.deg2rad(a))
+        x = R * np.cos(np.deg2rad(self.VerticalAngleDeg)) * np.sin(np.deg2rad(Azimuth))
+        y = R * np.cos(np.deg2rad(self.VerticalAngleDeg)) * np.cos(np.deg2rad(Azimuth))
         z = R * np.sin(np.deg2rad(self.VerticalAngleDeg))
-        
+        print(f"Matrix element-wise operation\n\tRadius {R.shape}\n\tVerticalAngleDeg * Azimuth  = {(self.VerticalAngleDeg).shape} * {(Azimuth).shape}\n\tresult shape : {z.shape}\n flatten : {(z.reshape([-1])).shape}")
         return x.reshape([-1]), y.reshape([-1]), z.reshape([-1])
 
     def __del__(self):
@@ -326,4 +326,3 @@ def point_write_csv(points):
         # for line in points.T:
         for z in points[2]:
             csvfile.write(str(z) + '\n')             
-        
