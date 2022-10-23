@@ -7,7 +7,7 @@ import matplotlib.pyplot  as plt
 from lib.common_util import RotationMatrix, TranslationMatrix
 import socket
 import threading
-# import open3d as o3d
+
 
 class UDP_LIDAR_Parser :
     
@@ -72,7 +72,7 @@ class UDP_LIDAR_Parser :
         Distance = Distance.reshape([-1, self.channel])/1000
         Intensity = Intensity.reshape([-1])
 
-        # filtring with azimuth
+        # #filtring with azimuth
         # azi_idx_range = np.where((Azimuth[:,0]<360.0-self.range) & (Azimuth[:,0]>self.range))
         # Azimuth = np.delete(Azimuth,azi_idx_range,axis=0)
         # Distance = np.delete(Distance,azi_idx_range,axis=0)
@@ -143,9 +143,9 @@ def printData(obj_data, position_x, position_y, position_z, center_points_np, eg
 
 def Dis_PointCloud(points):
     # display points by open3d
-    geom = o3d.geometry.PointCloud()
-    geom.points = o3d.utility.Vector3dVector(points.T)
-    o3d.visualization.draw_geometries([geom])
+    geom = open3d.geometry.PointCloud()
+    geom.points = open3d.utility.Vector3dVector(points.T)
+    open3d.visualization.draw_geometries([geom])
 
 # def Dis_rect(points)
 

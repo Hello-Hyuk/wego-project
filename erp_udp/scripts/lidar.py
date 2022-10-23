@@ -1,11 +1,10 @@
-from dis import dis
 import socket
 from urllib import response
 import cv2
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from lib.lidar_util import UDP_LIDAR_Parser, ROI_filtering, DBscan, get_center_point, Dis_PointCloud, printData
+from lib.lidar_util import UDP_LIDAR_Parser, ROI_filtering, DBscan, get_center_point, printData
 from lib.morai_udp_parser import udp_parser
 import os,json
 
@@ -61,8 +60,6 @@ def main():
             x=udp_lidar.x
             y=udp_lidar.y
             z=udp_lidar.z
-            intensity=udp_lidar.Intensity
-            distance=udp_lidar.Distance
 
             points = np.concatenate([
                 x.reshape([-1, 1]),
@@ -70,18 +67,26 @@ def main():
                 z.reshape([-1, 1])
             ], axis=1).T.astype(np.float32)
             #raw point cloud (57600, 3)
-            print(points)
+            print("raw point clouds",points,points.shape)
+            
             # point ROI 기반 filtering 진행
-            points = ROI_filtering(height, width, points)
+            #points = ROI_filtering(height, width, points)
             
             # point 탐지 여부 확인후 dbscan진행
             if points in points:
-                center_points = DBscan(points.T)
-                center_points_np = np.array(center_points)
-                center_points_np = np.squeeze(center_points)
-                ego_np = np.array([position_x,position_y,position_z])
+                # center_points = DBscan(points.T)
+                # center_points_np = np.array(center_points)
+                # center_points_np = np.squeeze(center_points)
+                # #ego_np = np.array([position_x,position_y,position_z])
                 
-                printData(obj_data, position_x, position_y, position_z, center_points_np, ego_np)
+                # #printData(obj_data, position_x, position_y, position_z, center_points_np, ego_np)
+                channel_list = udp_lidar.VerticalAngleDeg
+                channel_select = -9
+                channel_idx = np.where(channel_list == channel_select)
+                channel_idx = channel_idx[1][0]
+            
+                points = points.T[channel_idx::16,:]
+                print("channel sliced points",points.T,points.shape)
                 #Dis_PointCloud(points)
                 time.sleep(1)
             else : 

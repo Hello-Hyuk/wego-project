@@ -1,4 +1,4 @@
-object center point : [array([[0.06382457, 6.8654494 , 0.59186614]], dtype=float32)]
+#object center point : [array([[0.06382457, 6.8654494 , 0.59186614]], dtype=float32)]
 
 channel_list = udp_lidar.VerticalAngleDeg
 channel_select = -15
