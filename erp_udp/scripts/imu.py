@@ -43,7 +43,7 @@ def main():
             print(f"sim roll : {round(status_data[15],5)} pitch : {round(status_data[16],5)} heading : {round(status_data[17],5)}")
             print(f"my roll : {imu.roll} pitch : {imu.pitch} heading : {imu.heading}")
             time.sleep(0.7)
-        time.sleep(0.1)
+        time.sleep(0.1) 
 
 if __name__ == '__main__':
     main()
