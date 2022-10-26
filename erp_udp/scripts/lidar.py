@@ -62,6 +62,10 @@ def main():
             y=udp_lidar.y
             z=udp_lidar.z
 
+            sim_x = obj_x-position_x
+            sim_y = obj_y-position_y
+            sim_z = obj_z-position_z
+            #print(f"sim point\n x:{sim_x}\ny:{sim_y}\nz:{sim_z}\n")
             points = np.concatenate([
                 x.reshape([-1, 1]),
                 y.reshape([-1, 1]),
@@ -73,7 +77,6 @@ def main():
             # point ROI 기반 filtering 진행
             #points = ROI_filtering(height, width, points)
             
-            # point 탐지 여부 확인후 dbscan진행
             if points in points:
                 # center_points = DBscan(points.T)
                 # center_points_np = np.array(center_points)
@@ -90,8 +93,29 @@ def main():
                 print("channel sliced points",points.T,points.shape)
                 #Dis_PointCloud(points)
                 time.sleep(1)
-            else : 
-                print("Nothing Detected")
+                # display points by open3d
+                # geom = o3d.geometry.PointCloud()
+                # geom.points = o3d.utility.Vector3dVector(points.T)
+                # o3d.visualization.draw_geometries([geom])
+            else : pass
+
+            # object center point : [array([[0.06382457, 6.8654494 , 0.59186614]], dtype=float32)]
+            
+            # channel_list = udp_lidar.VerticalAngleDeg
+            # channel_select = -15
+            # channel_idx = np.where(channel_list == channel_select)
+            # # print("channel indexfull",channel_idx)
+            # # print("channel index[1][0]",channel_idx[1][0])
+            
+            # sdist = distance[channel_idx,:]
+            # spoints = points[channel_idx,:]
+            
+            # # slice channel
+            # sliced = intensity[channel_idx[1][0]::params_lidar['CHANNEL']]
+            # #point_write_csv(spoints)
+            
+            # # print(udp_lidar.VerticalAngleDeg)
+            # # print_i_d(intensity, distance)
 
 def print_i_d(intensity, distance):
     print('raw distance shape',(distance).shape)
