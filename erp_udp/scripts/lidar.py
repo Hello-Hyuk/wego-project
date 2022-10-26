@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from lib.lidar_util import UDP_LIDAR_Parser, ROI_filtering, DBscan, get_center_point, printData
 from lib.morai_udp_parser import udp_parser
 import os,json
+import open3d as o3d
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
 

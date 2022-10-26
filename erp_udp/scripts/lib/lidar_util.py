@@ -7,6 +7,7 @@ import matplotlib.pyplot  as plt
 from lib.common_util import RotationMatrix, TranslationMatrix
 import socket
 import threading
+import open3d as o3d
 
 
 class UDP_LIDAR_Parser :
@@ -93,6 +94,17 @@ class UDP_LIDAR_Parser :
         self.sock.close()
         print('del')
         
+def np2pcd(points_np):
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points_np)
+    return pcd
+
+def Voxelize(pcd):
+    print(f"Points before downsampling: {len(pcd.points)} ")
+    # Points before downsampling: 115384 
+    pcd = pcd.voxel_down_sample(voxel_size=0.2)
+    print(f"Points after downsampling: {len(pcd.points)}")  
+       
 def ROI_filtering(height, width, points):
     # z ROI
     points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
