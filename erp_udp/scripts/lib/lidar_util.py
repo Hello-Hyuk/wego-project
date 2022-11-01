@@ -87,25 +87,37 @@ class UDP_LIDAR_Parser :
         x = R * np.cos(np.deg2rad(self.VerticalAngleDeg)) * np.sin(np.deg2rad(Azimuth))
         y = R * np.cos(np.deg2rad(self.VerticalAngleDeg)) * np.cos(np.deg2rad(Azimuth))
         z = R * np.sin(np.deg2rad(self.VerticalAngleDeg))
-        print(f"Matrix element-wise operation\n\tRadius {R.shape}\n\tVerticalAngleDeg * Azimuth  = {(self.VerticalAngleDeg).shape} * {(Azimuth).shape}\n\tresult shape : {z.shape}\n flatten : {(z.reshape([-1])).shape}")
+        #print(f"Matrix element-wise operation\n\tRadius {R.shape}\n\tVerticalAngleDeg * Azimuth  = {(self.VerticalAngleDeg).shape} * {(Azimuth).shape}\n\tresult shape : {z.shape}\n flatten : {(z.reshape([-1])).shape}")
         return x.reshape([-1]), y.reshape([-1]), z.reshape([-1])
 
+    def channel_slice(self, points, channel):
+        channel_list = self.VerticalAngleDeg
+        channel_select = channel
+        channel_idx = np.where(channel_list == channel_select)
+        channel_idx = channel_idx[1][0]
+        points = points.T[channel_idx::16,:]
+        print("channel sliced points",points.T,points.shape)
+        return points
+        
     def __del__(self):
         self.sock.close()
         print('del')
         
-def np2pcd(points_np):
+def point_np2pcd(points_np):
     pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(points_np)
+    pcd.points = o3d.utility.Vector3dVector(points_np.T)
     return pcd
 
 def Voxelize(pcd):
     print(f"Points before downsampling: {len(pcd.points)} ")
     # Points before downsampling: 115384 
-    pcd = pcd.voxel_down_sample(voxel_size=0.2)
-    print(f"Points after downsampling: {len(pcd.points)}")  
+    pcd_voxelized = pcd.voxel_down_sample(voxel_size=0.2)
+    print(f"Points after downsampling: {len(pcd_voxelized.points)}")
+    
+    return pcd_voxelized
        
 def ROI_filtering(height, width, points):
+    #point shape (3,)
     points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
     points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
     
@@ -114,7 +126,8 @@ def ROI_filtering(height, width, points):
     
     points = np.delete(points,np.where(points[0,:]>width),axis=1)
     points = np.delete(points,np.where(points[0,:]<-width),axis=1)
-    return points
+
+    return points.T
 
 def DBscan(points):
     # create model and prediction
@@ -144,11 +157,11 @@ def printData(obj_data, position_x, position_y, position_z, center_points_np, eg
     print(f"simulation object point from lidar :\n {center_points_np+ego_np}")
     # print(f"obj data: {obj_data[0]}")
 
-def Dis_PointCloud(points):
+def Dis_PointCloud_np(points):
     # display points by open3d
-    geom = open3d.geometry.PointCloud()
-    geom.points = open3d.utility.Vector3dVector(points.T)
-    open3d.visualization.draw_geometries([geom])
+    geom = o3d.geometry.PointCloud()
+    geom.points = o3d.utility.Vector3dVector(points)
+    o3d.visualization.draw_geometries([geom])
 
 # def Dis_rect(points)
 
