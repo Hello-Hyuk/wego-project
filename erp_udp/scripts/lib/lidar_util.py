@@ -103,31 +103,41 @@ class UDP_LIDAR_Parser :
         self.sock.close()
         print('del')
         
-def point_np2pcd(points_np):
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(points_np.T)
-    return pcd
+class PCD:
+    def __init__(self):
+        self.pcd = o3d.geometry.PointCloud()
+        self.pcd_np = None
+        self.ROIheight = 18
+        self.ROIwidth = 6
+    
+    def point_np2pcd(self, points_np):
+        self.pcd_np = points_np.T
+        self.pcd = o3d.utility.Vector3dVector(self.pcd_np)
 
-def Voxelize(pcd):
-    print(f"Points before downsampling: {len(pcd.points)} ")
-    # Points before downsampling: 115384 
-    pcd_voxelized = pcd.voxel_down_sample(voxel_size=0.2)
-    print(f"Points after downsampling: {len(pcd_voxelized.points)}")
+    def Voxelize(self):
+        print(f"Points before downsampling: {len(self.pcd.points)} ")
+        # Points before downsampling: 115384 
+        self.pcd = self.pcd.voxel_down_sample(voxel_size=0.2)
+        print(f"Points after downsampling: {len(self.pcd.points)}")
+        self.pcd_np = np.asarray(self.pcd)
     
-    return pcd_voxelized
-       
-def ROI_filtering(height, width, points):
-    #point shape (3,)
-    points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
-    points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
-    
-    points = np.delete(points,np.where(points[1,:]>height),axis=1)
-    points = np.delete(points,np.where(points[1,:]<1),axis=1)
-    
-    points = np.delete(points,np.where(points[0,:]>width),axis=1)
-    points = np.delete(points,np.where(points[0,:]<-width),axis=1)
+    def Display_pcd(self):
+        o3d.visualization.draw_geometries([self.pcd])
 
-    return points.T
+    def ROI_filtering(self):
+        #point shape (3,)
+        points = self.pcd_np.T
+        points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
+        points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
+        
+        points = np.delete(points,np.where(points[1,:]>self.ROIheight),axis=1)
+        points = np.delete(points,np.where(points[1,:]<1),axis=1)
+        
+        points = np.delete(points,np.where(points[0,:]>self.ROIwidth),axis=1)
+        points = np.delete(points,np.where(points[0,:]<-self.ROIwidth),axis=1)
+
+        self.pcd_np = points.T
+        self.pcd = self.point_np2pcd(points)
 
 def DBscan(points):
     # create model and prediction

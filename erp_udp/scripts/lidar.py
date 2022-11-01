@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from lib.lidar_util import UDP_LIDAR_Parser, ROI_filtering, DBscan, get_center_point, printData, Dis_PointCloud_np, np2pcd, Voxelize
+from lib.lidar_util import UDP_LIDAR_Parser, ROI_filtering, DBscan, get_center_point, printData, Dis_PointCloud_np, PCD
 from lib.morai_udp_parser import udp_parser
 import os,json
 import open3d as o3d
@@ -39,6 +39,7 @@ def main():
     udp_lidar = UDP_LIDAR_Parser(ip=params_lidar["localIP"], port=params_lidar["localPort"], params_lidar=params_lidar)
     obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')
     ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
+    lidar_pcd = PCD()
     height = 18
     width = 6
     while True :
@@ -76,13 +77,14 @@ def main():
             print("point clouds",points,points.shape)
             
             #numpy to point cloud data
-            pcd = np2pcd(points)
+            lidar_pcd.np2pcd(points)
             #voxelize
-            pcd_voxelized = Voxelize(pcd)
-            o3d.visualization.draw_geometries([pcd_voxelized])
+            lidar_pcd.Voxelize()
+            lidar_pcd.Display_pcd()
             
             # point ROI 기반 filtering 진행
             points = ROI_filtering(height, width, points)
+            
             if points in points:
                 # points shape (,3)
                 center_points = DBscan(points)
@@ -92,10 +94,6 @@ def main():
                 
                 Dis_PointCloud_np(points)
                 time.sleep(1)
-                # display points by open3d
-                # geom = o3d.geometry.PointCloud()
-                # geom.points = o3d.utility.Vector3dVector(points.T)
-                # o3d.visualization.draw_geometries([geom])
             else : pass
 
 def print_i_d(intensity, distance):
