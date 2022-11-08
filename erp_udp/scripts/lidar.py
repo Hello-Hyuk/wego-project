@@ -1,10 +1,6 @@
-import socket
-from urllib import response
-import cv2
 import numpy as np
 import time
-import matplotlib.pyplot as plt
-from lib.lidar_util import UDP_LIDAR_Parser, get_center_point, printData
+from lib.lidar_util import UDP_LIDAR_Parser
 from lib.morai_udp_parser import udp_parser
 import os,json
 from sklearn.cluster import dbscan
@@ -21,14 +17,6 @@ lidar_port = params_connect["lidar_dst_port"]
 params_lidar = params["params_lidar"]
 
 print(user_ip,lidar_port)
-
-# params_lidar = {
-#     "Range" : 90.0, #min & max range of lidar azimuths
-#     "CHANNEL" :16, #verticla channel of a lidar
-#     "localIP": user_ip,
-#     "localPort": lidar_port,
-#     "Block_SIZE": int(1206)
-# }
 
 class LIDAR():
     def __init__(self,params_lidar):
@@ -57,9 +45,11 @@ class LIDAR():
             #voxelize
             self.pcd_info.Voxelize()
             height,width = 18,6
+            #ROI filtering
             self.pcd_info.ROI_filtering(height,width)
             #self.pcd_info.Display_pcd()
             
+            # DBscan clustering
             if self.pcd_info.pcd.points :
                 # points shape (,3)
                 self.n_clusters, self.cluster_coords = self.pcd_info.DBscan()
@@ -70,7 +60,7 @@ class LIDAR():
     
     def display_info(self):
         print(f"number of point cloud data : {self.pcd_info.pcd_np.shape}")
-        print(f"number of cluster : {self.n_clusters}\ncluster coordinate :\n{self.cluster_coords}\n")
+        print(f"number of cluster : {self.n_clusters}\ncluster coordinate :\n{self.cluster_coords}")
 
 class PCD:
     def __init__(self):
@@ -121,7 +111,6 @@ class PCD:
             
         center_points_np = np.array(center_point)
         center_points_np = np.squeeze(center_points_np)
-    
         
         if len(center_points_np) == 3:
             center_points_sorted = center_points_np
@@ -145,7 +134,6 @@ def main():
         if lidar.udp_lidar.is_lidar ==True:
             # data parsing
             ####### obj info
-            
             obj_data=obj.get_data()
             obj_data_np = np.array(obj_data)
             obj_coords = obj_data_np[:,2:5]
@@ -154,20 +142,15 @@ def main():
             status_data = ego.get_data()
             status_data_np = np.array(status_data)
             ego_coords = status_data_np[12:15]
-
             
             # compare with sim object coordinate
-            
-            print("af",obj_coords, ego_coords)
-            
-            sim_coord = ego_coords - obj_coords
+            sim_coord = obj_coords - ego_coords
             
             #lidar call_back function
             lidar.lidar_call_back()
             # compare with simulation information
             lidar.display_info()
-            print(f"simulation object position :\n{sim_coord}")
+            print(f"simulation object position :\n{sim_coord}\n")
             
-        
 if __name__ == '__main__':
     main()

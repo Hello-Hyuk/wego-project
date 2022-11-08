@@ -101,11 +101,6 @@ class UDP_LIDAR_Parser :
         
 
 
-
-def get_center_point(points,idx):
-    point = np.mean(points[idx,:],axis=1)
-    return point
-
 def print_i_d(intensity, distance):
     print('raw distance shape',(distance).shape)
     print('raw intensity shape',(intensity).shape)
