@@ -103,58 +103,32 @@ class UDP_LIDAR_Parser :
         self.sock.close()
         print('del')
         
-class PCD:
-    def __init__(self):
-        self.pcd =  o3d.geometry.PointCloud()
-        self.pcd_np = None
-    
-    def point_np2pcd(self, points_np):
-        self.pcd_np = points_np.T        
-        self.pcd.points = o3d.utility.Vector3dVector(self.pcd_np)
-
-    def Voxelize(self):
-        print(f"Points before downsampling: {len(self.pcd.points)} ")
-        # Points before downsampling: 115384 
-        self.pcd = self.pcd.voxel_down_sample(voxel_size=0.2)
-        print(f"Points after downsampling: {len(self.pcd.points)}")
-        self.pcd_np = np.asarray(self.pcd.points)
-    
-    def Display_pcd(self):
-        o3d.visualization.draw_geometries([self.pcd])
-
-    def ROI_filtering(self,ROIheight,ROIwidth):
-        #point shape (3,)
-        points = self.pcd_np.T
-
-        points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
-        points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
-        
-        points = np.delete(points,np.where(points[1,:]>ROIheight),axis=1)
-        points = np.delete(points,np.where(points[1,:]<1),axis=1)
-        
-        points = np.delete(points,np.where(points[0,:]>ROIwidth),axis=1)
-        points = np.delete(points,np.where(points[0,:]<-ROIwidth),axis=1)
-
-        self.pcd_np = points.T
-        self.point_np2pcd(points)
 
 def DBscan(points):
     # create model and prediction
     centroid, labels = dbscan(points, eps=1.0, min_samples=10)
-    center_point = []
-    for label in range(len(set(labels[labels!=-1]))):
-        idx = np.where(labels==label)
-        center_point.append(get_center_point(points,idx))
-        
-    # print(set(labels))
     # Number of clusters in labels, ignoring noise if present.
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
     n_noise_ = list(labels).count(-1)
     
-    # # labelcount = len(np.unique(labels))
+    center_point = []
+    for label in range(len(set(labels[labels!=-1]))):
+        idx = np.where(labels==label)
+        center_point.append(np.mean(points[idx,:],axis=1))
+        
+    center_points_np = np.array(center_point)
+    center_points_np = np.squeeze(center_points_np)
+  
+    
+    if len(center_points_np) == 3:
+        center_points_sorted = center_points_np
+    else :
+        center_points_sorted = center_points_np[center_points_np[:,1].argsort()]
+    
+    # print(set(labels))
     # print("Estimated number of clusters: %d" % n_clusters_)
     # print("Estimated number of noise points: %d" % n_noise_)
-    return n_clusters_, center_point
+    return n_clusters_, center_points_sorted
 
 def get_center_point(points,idx):
     point = np.mean(points[idx,:],axis=1)

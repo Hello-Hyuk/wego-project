@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from lib.lidar_util import UDP_LIDAR_Parser, DBscan, get_center_point, printData, PCD
+from lib.lidar_util import UDP_LIDAR_Parser, DBscan, get_center_point, printData
 from lib.morai_udp_parser import udp_parser
 import os,json
 import open3d as o3d
@@ -57,21 +57,54 @@ class LIDAR():
             self.pcd_info.Voxelize()
             height,width = 18,6
             self.pcd_info.ROI_filtering(height,width)
-            self.pcd_info.Display_pcd()
+            #self.pcd_info.Display_pcd()
             
             if self.pcd_info.pcd.points :
                 # points shape (,3)
                 n_clusters_, center_points = DBscan(self.pcd_info.pcd_np)
-                center_points_np = np.array(center_points)
-                center_points_np = np.squeeze(center_points)
                 self.n_clusters = n_clusters_
-                self.cluster_coords = center_points_np
+                self.cluster_coords = center_points
                 time.sleep(1)
             else : pass
 
     def display_info(self):
         print(f"number of point cloud data : {self.pcd_info.pcd_np.shape}")
         print(f"number of cluster : {self.n_clusters}\ncluster coordinate : {self.cluster_coords}\n")
+
+class PCD:
+    def __init__(self):
+        self.pcd =  o3d.geometry.PointCloud()
+        self.pcd_np = None
+    
+    def point_np2pcd(self, points_np):
+        self.pcd_np = points_np.T        
+        self.pcd.points = o3d.utility.Vector3dVector(self.pcd_np)
+
+    def Voxelize(self):
+        print(f"Points before downsampling: {len(self.pcd.points)} ")
+        # Points before downsampling: 115384 
+        self.pcd = self.pcd.voxel_down_sample(voxel_size=0.2)
+        print(f"Points after downsampling: {len(self.pcd.points)}")
+        self.pcd_np = np.asarray(self.pcd.points)
+    
+    def Display_pcd(self):
+        o3d.visualization.draw_geometries([self.pcd])
+
+    def ROI_filtering(self,ROIheight,ROIwidth):
+        #point shape (3,)
+        points = self.pcd_np.T
+
+        points = np.delete(points,np.where(points[2,:]<-0.5),axis=1)
+        points = np.delete(points,np.where(points[2,:]>0.7),axis=1)
+        
+        points = np.delete(points,np.where(points[1,:]>ROIheight),axis=1)
+        points = np.delete(points,np.where(points[1,:]<1),axis=1)
+        
+        points = np.delete(points,np.where(points[0,:]>ROIwidth),axis=1)
+        points = np.delete(points,np.where(points[0,:]<-ROIwidth),axis=1)
+
+        self.pcd_np = points.T
+        self.point_np2pcd(points)
 
 def main():
     lidar = LIDAR(params_lidar)
