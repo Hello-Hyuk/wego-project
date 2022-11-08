@@ -4,9 +4,10 @@ import cv2
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from lib.lidar_util import UDP_LIDAR_Parser, DBscan, get_center_point, printData
+from lib.lidar_util import UDP_LIDAR_Parser, get_center_point, printData
 from lib.morai_udp_parser import udp_parser
 import os,json
+from sklearn.cluster import dbscan
 import open3d as o3d
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
@@ -61,12 +62,38 @@ class LIDAR():
             
             if self.pcd_info.pcd.points :
                 # points shape (,3)
-                n_clusters_, center_points = DBscan(self.pcd_info.pcd_np)
-                self.n_clusters = n_clusters_
-                self.cluster_coords = center_points
+                self.n_clusters, self.cluster_coords = self.DBscan()
                 time.sleep(1)
             else : pass
-
+            
+    def DBscan(self):
+        # create model and prediction
+        centroid, labels = dbscan(self.pcd_info.pcd_np, eps=1.0, min_samples=10)
+        # Number of clusters in labels, ignoring noise if present.
+        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+        n_noise_ = list(labels).count(-1)
+        
+        center_point = []
+        for label in range(len(set(labels[labels!=-1]))):
+            idx = np.where(labels==label)
+            center_point.append(np.mean(self.pcd_info.pcd_np[idx,:],axis=1))
+            
+        center_points_np = np.array(center_point)
+        center_points_np = np.squeeze(center_points_np)
+    
+        
+        if len(center_points_np) == 3:
+            center_points_sorted = center_points_np
+        else :
+            try : center_points_sorted = center_points_np[center_points_np[:,1].argsort()]
+            # Morai respwan bug exception
+            except IndexError:
+                center_points_sorted = center_points_np
+        # print(set(labels))
+        # print("Estimated number of clusters: %d" % n_clusters_)
+        # print("Estimated number of noise points: %d" % n_noise_)
+        return n_clusters_, center_points_sorted
+    
     def display_info(self):
         print(f"number of point cloud data : {self.pcd_info.pcd_np.shape}")
         print(f"number of cluster : {self.n_clusters}\ncluster coordinate : {self.cluster_coords}\n")

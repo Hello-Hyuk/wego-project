@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import math
-from sklearn.cluster import dbscan
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot  as plt
 from lib.common_util import RotationMatrix, TranslationMatrix
@@ -104,31 +103,7 @@ class UDP_LIDAR_Parser :
         print('del')
         
 
-def DBscan(points):
-    # create model and prediction
-    centroid, labels = dbscan(points, eps=1.0, min_samples=10)
-    # Number of clusters in labels, ignoring noise if present.
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
-    
-    center_point = []
-    for label in range(len(set(labels[labels!=-1]))):
-        idx = np.where(labels==label)
-        center_point.append(np.mean(points[idx,:],axis=1))
-        
-    center_points_np = np.array(center_point)
-    center_points_np = np.squeeze(center_points_np)
-  
-    
-    if len(center_points_np) == 3:
-        center_points_sorted = center_points_np
-    else :
-        center_points_sorted = center_points_np[center_points_np[:,1].argsort()]
-    
-    # print(set(labels))
-    # print("Estimated number of clusters: %d" % n_clusters_)
-    # print("Estimated number of noise points: %d" % n_noise_)
-    return n_clusters_, center_points_sorted
+
 
 def get_center_point(points,idx):
     point = np.mean(points[idx,:],axis=1)
