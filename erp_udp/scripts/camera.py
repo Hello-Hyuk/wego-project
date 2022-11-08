@@ -45,7 +45,7 @@ ref_pos = [95.91738891601562,1608.2139892578125,1]
 
 #pix2world param
 # real xy roi
-#97.23139953613281, 1610.06298828125, -0.42770472168922424
+#97.23139953613281, 1610.06298828125,
 #109.17155456542969, 1610.157958984375
 #109.2884750366211, 1606.446044921875
 #97.22319030761719, 1606.4361572265625
@@ -63,10 +63,7 @@ map = np.ones((2000,2000,3),np.uint8)
 def main():
     obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')
     ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
-    udp_cam = UDP_CAM_Parser(ip=params_cam["localIP"], port=params_cam["localPort"], params_cam=params_cam)
-    left_line = Line()
-    right_line = Line()
-    
+    udp_cam = UDP_CAM_Parser(ip=params_cam["localIP"], port=params_cam["localPort"], params_cam=params_cam)    
     init_xy = False
     prev_x, prev_y = 0, 0
     global map
@@ -108,21 +105,13 @@ def main():
                 left, right, center = window_search(res2)
             except TypeError:
                 continue
-            #left,right,center = find_lanes(res2, left_line, right_line)
-            # point tranformation (bev -> origin)
             
+            # point tranformation (bev -> origin)
             for point in center:
                 cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (0,0,207), thickness=30)
                 pass
             # transformation origin pixel -> x,y coordinate
-            
-
-            # display
-            inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))
-            rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
-            cv2.imshow("ver2",rst)
-
-
+        
             ######## obj info
             obj_data=obj.get_data()
             ######## ego info
@@ -130,66 +119,59 @@ def main():
             position_x=status_data[12]
             position_y=status_data[13]
             position_z=status_data[14]
-
-            if init_xy == False:
-                prev_x = position_x
-                prev_y = position_y
-                init_xy = True
-
             cur_heading = status_data[17]
 
             # transformation
             theta = cur_heading - ref_heading
-
             origin_m = Tmatrix_2D(-ref_pos[0],-ref_pos[1])
             trans_m = Tmatrix_2D(position_x,position_y)
-            rm = Rmatrix_2D(theta)
+            rotation_m = Rmatrix_2D(theta)
 
-            left_wp = pix2world(inv_mat, left,origin_m,rm,trans_m)
-            right_wp =pix2world(inv_mat, right,origin_m,rm,trans_m)
-            center_wp =pix2world(inv_mat, center,origin_m,rm,trans_m)
+            left_wp = pix2world(inv_mat, left,origin_m,rotation_m,trans_m)
+            right_wp =pix2world(inv_mat, right,origin_m,rotation_m,trans_m)
+            center_wp =pix2world(inv_mat, center,origin_m,rotation_m,trans_m)
 
             # waypoint generator
+            if init_xy == False:
+                prev_x = position_x
+                prev_y = position_y
+                init_xy = True
+                
             dist = np.sqrt((center_wp[0]-prev_x)**2+(center_wp[1]-prev_y)**2)
             if dist > 0.3 :
                 data = '{0}\t{1}\t{2}\n'.format(center_wp[0],center_wp[1],position_z)
                 # f.write(data)
                 prev_x = center_wp[0]
                 prev_y = center_wp[1]
-                #print("waypoint : \n",wp[0],wp[1])
 
+            # display
+            inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))
+            rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
+            # cv2.imshow("ver1",cprst)
+            cv2.imshow("ver2",rst)
+            
             # value check
-            # print("pix2 x ,y :",real_point[0],real_point[1])
-            # print("origin ego : \n",ego_point[0],ego_point[1])
-            # print("origin : \n",origin_point[0],origin_point[1])
-            # print("Rwayp : \n",Rwaypoint[0],Rwaypoint[1])
-            print("waypoint : \n",center_wp[0], center_wp[1])
-            print("obj_data : \n",obj_data)
+            # print("waypoint : \n",center_wp[0], center_wp[1])
+            # print("obj_data : \n",obj_data)
             # print("cur pos : \n",position_x,position_y)
             # print("ref heading : \n",ref_heading)
             # print("ref pos : \n",ref_pos)
             # print("cur heading : \n",cur_heading)
-            # print("scale : \n",scale)
             # print("theta diff : ", theta)
-
 
             # visual SLAM
             int_lwp = left_wp.astype(int)
             int_rwp = right_wp.astype(int)
-            
-            # cv2.polylines(cmap, [right.astype(int)], False, (0,255,0), thickness=5)
-            # cv2.polylines(cmap, [left.astype(int)], False, (0,0,255), thickness=5)
             
             cv2.line(map,(int_lwp[0],int_lwp[1]),(int_lwp[0],int_lwp[1]),(0,0,255),5)
             cv2.line(map,(int_rwp[0],int_rwp[1]),(int_rwp[0],int_rwp[1]),(0,255,0),5)
             cmap = cv2.resize(map,(500,500))
             cv2.imshow("display ",cmap)
             
-            # display
-            inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))
-            rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
-            # cv2.imshow("ver1",cprst)
-            # cv2.imshow("ver2",rst)
+           
+            
+
+
 
             cv2.waitKey(1)
 
