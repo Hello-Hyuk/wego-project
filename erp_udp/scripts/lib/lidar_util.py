@@ -170,12 +170,6 @@ def printData(obj_data, position_x, position_y, position_z, center_points_np, eg
     print(f"simulation object point from lidar :\n {center_points_np+ego_np}")
     # print(f"obj data: {obj_data[0]}")
 
-def Dis_PointCloud_np(points):
-    # display points by open3d
-    geom = o3d.geometry.PointCloud()
-    geom.points = o3d.utility.Vector3dVector(points)
-    o3d.visualization.draw_geometries([geom])
-
 # def Dis_rect(points)
 
 def transformMTX_lidar2cam(params_lidar, params_cam):
