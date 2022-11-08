@@ -20,7 +20,7 @@ print(user_ip,lidar_port)
 
 class LIDAR():
     def __init__(self,params_lidar):
-        self.udp_lidar = UDP_LIDAR_Parser(ip=user_ip, port=lidar_port, params_lidar=params_lidar)
+        self.udp_lidar = UDP_LIDAR_Parser(user_ip, lidar_port, params_lidar=params_lidar)
         self.pcd_info = PCD()
         self.n_clusters = 0
         self.cluster_coords = None  
@@ -44,17 +44,19 @@ class LIDAR():
             self.pcd_info.point_np2pcd(points)
             #voxelize
             self.pcd_info.Voxelize()
-            height,width = 18,6
+            
+            height,width = 10,3
             #ROI filtering
             self.pcd_info.ROI_filtering(height,width)
-            #self.pcd_info.Display_pcd()
             
             # DBscan clustering
             if self.pcd_info.pcd.points :
                 # points shape (,3)
+                self.pcd_info.Display_pcd()
                 self.n_clusters, self.cluster_coords = self.pcd_info.DBscan()
                 time.sleep(1)
             else : 
+                self.n_clusters, self.cluster_coords = 0, None
                 time.sleep(1)
                 pass
     

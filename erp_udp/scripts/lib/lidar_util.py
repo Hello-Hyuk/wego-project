@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
 import math
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot  as plt
 from lib.common_util import RotationMatrix, TranslationMatrix
 import socket
 import threading
@@ -33,6 +31,7 @@ class UDP_LIDAR_Parser :
         self.is_lidar=False
         thread = threading.Thread(target=self.loop)
         thread.daemon = True 
+        
         thread.start() 
     
     def loop(self):
@@ -40,19 +39,18 @@ class UDP_LIDAR_Parser :
             self.x,self.y,self.z,self.Intensity,self.Distance,self.Azimuth=self.recv_udp_data()
             # lidar_result(x,y,z,Intensity)
             self.is_lidar=True
+            
 
     def recv_udp_data(self):
-
+        
         Buffer = b''
-
+        
         for _ in range(self.max_len):
 
             UnitBlock, sender = self.sock.recvfrom(self.data_size)
-            
             Buffer+=UnitBlock[:1200]
-
+           
         Buffer_np=np.frombuffer(Buffer, dtype=np.uint8).reshape([-1, 100])
-
         if self.channel==16:
             Azimuth = np.zeros((24*self.max_len,))
             Azimuth[0::2] = Buffer_np[:,2].astype(np.float32) + 256*Buffer_np[:,3].astype(np.float32)
@@ -68,12 +66,12 @@ class UDP_LIDAR_Parser :
         
         Distance = Distance.reshape([-1, self.channel])/1000
         Intensity = Intensity.reshape([-1])
-
+    
         ### filtring with azimuth
         # azi_idx_range = np.where((Azimuth[:,0]<360.0-self.range) & (Azimuth[:,0]>self.range))
         # Azimuth = np.delete(Azimuth,azi_idx_range,axis=0)
         # Distance = np.delete(Distance,azi_idx_range,axis=0)
-        
+
         x, y, z = self.sph2cart(Distance, Azimuth)
         
         return x, y, z, Intensity, Distance, Azimuth[0]

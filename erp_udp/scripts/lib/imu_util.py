@@ -13,6 +13,7 @@ class udp_sensor_parser :
         self.sock.bind(recv_address)
         self.data_size=65535 
         self.parsed_data=[]
+        self.is_imu = False
         thread = threading.Thread(target=self.recv_udp_data)
         thread.daemon = True 
         thread.start() 
@@ -21,6 +22,7 @@ class udp_sensor_parser :
         while True :
             raw_data, sender = self.sock.recvfrom(self.data_size)
             self.data_parsing(raw_data)
+            self.is_imu = True
 
     def data_parsing(self,raw_data) :
         if self.data_type=='imu' :
