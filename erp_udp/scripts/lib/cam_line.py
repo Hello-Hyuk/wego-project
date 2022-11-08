@@ -179,7 +179,7 @@ def window_search(binary_warped):
     # 좌우 차선 별 2차함수 계수 추정
     left_fit = np.polyfit(lefty, leftx, 2)
     right_fit = np.polyfit(righty, rightx, 2)
-
+    
     # 좌우 차선 별 2차 곡선 생성 
     ploty = np.linspace(0, binary_warped.shape[0]-1, 3)
     

@@ -104,7 +104,10 @@ def main():
 
             cv2.imshow("result",res2*255)
             # window search and get center point of lanes (bev)
-            left, right, center= window_search(res2)
+            try :
+                left, right, center = window_search(res2)
+            except TypeError:
+                continue
             #left,right,center = find_lanes(res2, left_line, right_line)
             # point tranformation (bev -> origin)
             
@@ -187,7 +190,6 @@ def main():
             rst = cv2.addWeighted(img_cam, 1, inv_img, 0.5, 0)
             # cv2.imshow("ver1",cprst)
             # cv2.imshow("ver2",rst)
-
 
             cv2.waitKey(1)
 
