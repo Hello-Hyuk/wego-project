@@ -41,9 +41,6 @@ class UDP_LIDAR_Parser :
             # lidar_result(x,y,z,Intensity)
             self.is_lidar=True
 
-    # def lidar_result(self,x,y,z,Intensity):
-    #     return x,y,z,Intensity
-
     def recv_udp_data(self):
 
         Buffer = b''
@@ -72,7 +69,7 @@ class UDP_LIDAR_Parser :
         Distance = Distance.reshape([-1, self.channel])/1000
         Intensity = Intensity.reshape([-1])
 
-        # #filtring with azimuth
+        ### filtring with azimuth
         # azi_idx_range = np.where((Azimuth[:,0]<360.0-self.range) & (Azimuth[:,0]>self.range))
         # Azimuth = np.delete(Azimuth,azi_idx_range,axis=0)
         # Distance = np.delete(Distance,azi_idx_range,axis=0)
