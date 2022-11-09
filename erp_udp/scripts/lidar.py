@@ -53,7 +53,7 @@ class LIDAR():
             if self.pcd_info.pcd.points :
                 # points shape (,3)
                 self.pcd_info.Display_pcd()
-                self.n_clusters, self.cluster_coords = self.pcd_info.DBscan()
+                self.n_clusters, self.cluster_coords = self.pcd_info.o3d_DBscan()
                 time.sleep(1)
             else : 
                 self.n_clusters, self.cluster_coords = 0, None
@@ -126,6 +126,34 @@ class PCD:
         # print("Estimated number of clusters: %d" % n_clusters_)
         # print("Estimated number of noise points: %d" % n_noise_)
         return n_clusters_, center_points_sorted
+    
+    def o3d_DBscan(self):
+            # create model and prediction
+            self.labels = self.pcd.cluster_dbscan(eps=1.0, min_points=10)
+            # Number of clusters in labels, ignoring noise if present.
+            n_clusters_ = len(set(self.labels)) - (1 if -1 in self.labels else 0)
+            n_noise_ = list(self.labels).count(-1)
+            
+            center_point = []
+            for label in range(len(set(self.labels[self.labels!=-1]))):
+                idx = np.where(self.labels==label)
+                center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
+                
+            center_points_np = np.array(center_point)
+            center_points_np = np.squeeze(center_points_np)
+            
+            if len(center_points_np) == 3:
+                center_points_sorted = center_points_np
+            else :
+                try : center_points_sorted = center_points_np[center_points_np[:,1].argsort()]
+                # Morai respwan bug exception
+                except IndexError:
+                    center_points_sorted = center_points_np
+                    
+            # print(set(labels))
+            # print("Estimated number of clusters: %d" % n_clusters_)
+            # print("Estimated number of noise points: %d" % n_noise_)
+            return n_clusters_, center_points_sorted
 
 def main():
     lidar = LIDAR(params_lidar)
@@ -138,7 +166,10 @@ def main():
             ####### obj info
             obj_data=obj.get_data()
             obj_data_np = np.array(obj_data)
-            obj_coords = obj_data_np[:,2:5]
+            try : 
+                obj_coords = obj_data_np[:,2:5]
+            except IndexError :
+                obj_coords = obj_data_np[2:5]
                 
             ####### ego info
             status_data = ego.get_data()
@@ -146,13 +177,13 @@ def main():
             ego_coords = status_data_np[12:15]
             
             # compare with sim object coordinate
-            sim_coord = obj_coords - ego_coords
+            #sim_coord = obj_coords - ego_coords
             
             #lidar call_back function
             lidar.lidar_call_back()
             # compare with simulation information
             lidar.display_info()
-            print(f"simulation object position :\n{sim_coord}\n")
+            #print(f"simulation object position :\n{sim_coord}\n")
             
 if __name__ == '__main__':
     main()
