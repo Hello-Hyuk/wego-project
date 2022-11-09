@@ -135,6 +135,8 @@ class PCD:
             n_noise_ = list(self.labels).count(-1)
             
             center_point = []
+            self.labels = np.asarray(self.labels)
+        
             for label in range(len(set(self.labels[self.labels!=-1]))):
                 idx = np.where(self.labels==label)
                 center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
