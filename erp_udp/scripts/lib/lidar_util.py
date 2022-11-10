@@ -85,15 +85,6 @@ class UDP_LIDAR_Parser :
         # print(f"{x.shape} = {R.shape} * {np.cos(np.deg2rad(self.VerticalAngleDeg)).shape} * {np.sin(np.deg2rad(Azimuth)).shape}")
         # print(f"Matrix element-wise operation\n\tRadius {R.shape}\n\tVerticalAngleDeg * Azimuth  = {(self.VerticalAngleDeg).shape} * {(Azimuth).shape}\n\tresult shape : {z.shape}\n flatten : {(z.reshape([-1])).shape}")
         return x.reshape([-1]), y.reshape([-1]), z.reshape([-1])
-
-    def channel_slice(self, points, channel):
-        channel_list = self.VerticalAngleDeg
-        channel_select = channel
-        channel_idx = np.where(channel_list == channel_select)
-        channel_idx = channel_idx[1][0]
-        points = points.T[channel_idx::16,:]
-        print("channel sliced points",points.T,points.shape)
-        return points
         
     def __del__(self):
         self.sock.close()

@@ -82,7 +82,21 @@ class PCD:
     
     def Display_pcd(self):
         o3d.visualization.draw_geometries([self.pcd])
-
+        
+    def Write_pcd(self, file_name):
+        output_file = file_name
+        with open(output_file, 'wt', newline='\r\n', encoding='UTF-8') as csvfile:
+            for line in self.pcd_np:
+                csvfile.write(str(line) + '\n')
+                
+    def channel_filtering(self, channel_select):
+        channel_list = np.array([[-15,1,-13,3,-11,5,-9,7,-7,9,-5,11,-3,13,-1,15]])
+        channel_idx = np.where(channel_list == channel_select)
+        channel_idx = channel_idx[1][0]
+        
+        self.pcd_np = self.pcd_np.T[channel_idx::16,:]
+        self.point_np2pcd(self.pcd_np)
+        
     def ROI_filtering(self,ROIheight,ROIwidth):
         #point shape (3,)
         points = self.pcd_np.T
