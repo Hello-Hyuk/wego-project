@@ -1,7 +1,6 @@
 import socket
 import threading
-import time
-import struct
+
 class UDP_GPS_Parser :
     def __init__(self,ip,port,data_type):
         self.type=data_type
