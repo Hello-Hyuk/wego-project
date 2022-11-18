@@ -73,7 +73,7 @@ def main():
     file_path = os.path.normpath(os.path.join(file_path, '..'))
 
     full_path = file_path+'/'+path_folder_name+'/'+path_file_name
-    f=open(full_path, 'w')
+    #f=open(full_path, 'a')
     while True :
         if udp_cam.is_img==True :
 
@@ -136,7 +136,8 @@ def main():
                 prev_x = position_x
                 prev_y = position_y
                 init_xy = True
-                
+            
+            # waypoint write to file
             dist = np.sqrt((center_wp[0]-prev_x)**2+(center_wp[1]-prev_y)**2)
             if dist > 0.3 :
                 data = '{0}\t{1}\t{2}\n'.format(center_wp[0],center_wp[1],position_z)
@@ -167,12 +168,6 @@ def main():
             cv2.line(map,(int_rwp[0],int_rwp[1]),(int_rwp[0],int_rwp[1]),(0,255,0),5)
             cmap = cv2.resize(map,(500,500))
             cv2.imshow("display ",cmap)
-            
-           
-            
-
-
-
             cv2.waitKey(1)
 
 
