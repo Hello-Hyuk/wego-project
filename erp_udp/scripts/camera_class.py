@@ -76,7 +76,7 @@ class CAM():
         
         res2 = np.zeros_like(ht)
         res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 1
-        
+        self.img = res2*255
         try :
             left, right, center, left_fit, right_fit, self.curvature = window_search(res2)
         except TypeError:
@@ -88,7 +88,7 @@ class CAM():
             self.steer = -math.atan(self.curvature)
         else:
             self.steer = math.atan(self.curvature)
-    
+
     def display_info(self):
         print(f"curvature : {self.curvature}\nwaypoint : {self.waypoint}\nego_offset : {self.ego_offset}\nsteer : {self.steer}")
         

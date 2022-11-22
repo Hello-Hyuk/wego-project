@@ -1,6 +1,6 @@
 from camera_class import CAM
 from lib.morai_udp_parser import udp_parser,udp_sender
-
+import cv2
 import time
 import threading
 import os,json
@@ -47,7 +47,7 @@ class lkas :
         ctrl_mode = 2 # 2 = AutoMode / 1 = KeyBoard
         Gear = 4 # 4 1 : (P / parking ) 2 (R / reverse) 3 (N / Neutral)  4 : (D / Drive) 5 : (L)
         cmd_type = 2 # 1 : Throttle  /  2 : Velocity  /  3 : Acceleration        
-        send_velocity = 10 #cmd_type이 2일때 원하는 속도를 넣어준다.
+        send_velocity = 25 #cmd_type이 2일때 원하는 속도를 넣어준다.
         acceleration = 0 #cmd_type이 3일때 원하는 가속도를 넣어준다.     
         accel=0
         brake=0
@@ -56,8 +56,8 @@ class lkas :
         # print(len(self.cnt))
         # if abs(self.cam.ego_offset) > 2.5:
         #     self.cam.ego_offset = 0
-        if abs(self.cam.ego_offset) > 1.5:
-            self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,self.cam.steer*0.3])
+        if abs(self.cam.ego_offset) > 1.3:
+            self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,self.cam.steer*0.1])
             self.cnt = []
         else : 
             self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,0])
