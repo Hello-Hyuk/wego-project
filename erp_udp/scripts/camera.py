@@ -33,6 +33,18 @@ params_cam = {
     "Block_SIZE": int(65000)
 }
 
+class CAM():
+    def __init__(self):
+        self.udp_cam = UDP_CAM_Parser(ip=params_cam["localIP"], port=params_cam["localPort"], params_cam=params_cam)    
+        self.curvature = PCD()
+        self.n_clusters = 0
+        self.cluster_coords = None  
+        
+    def gps_call_back(self):
+        self.x, self.y, self.z = pymap3d.geodetic2enu(self.gps_parser.parsed_data[0], self.gps_parser.parsed_data[1], self.alt,
+                                                 self.lat, self.lon, self.alt) 
+
+
 # bev params
 offset = [60,0]
 bev_roi = np.array([[73, 480],[277, 325],[360, 325],[563, 480]])
@@ -103,7 +115,7 @@ def main():
             
             # window search and get center point of lanes (bev)
             try :
-                left, right, center, left_fit, right_fit = window_search(res2)
+                left, right, center, left_fit, right_fit, curvature = window_search(res2)
             except TypeError:
                 continue
             
@@ -135,9 +147,15 @@ def main():
             center_wp =(pix2world(inv_mat, center,origin_m,rotation_m,trans_m))[0]
             left_wp =(pix2world(inv_mat, left,origin_m,rotation_m,trans_m))[0]
             right_wp =(pix2world(inv_mat, right,origin_m,rotation_m,trans_m))[0]
-
-            print("offset",calc_vehicle_offset(img_cam,left_fit,right_fit))
-            print("way point ", center_wp)
+            ego_offset = calc_vehicle_offset(img_cam,left_fit,right_fit)
+            print("offset",ego_offset)
+            print("curvature : ",curvature)
+            steer = 0
+            if ego_offset > 0 :
+                steer = math.atan(curvature)
+            else:
+                steer = -math.atan(curvature)
+            print("steer : ", steer)
             # waypoint generator
             if init_xy == False:
                 prev_x = position_x

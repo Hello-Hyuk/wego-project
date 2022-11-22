@@ -75,7 +75,7 @@ def window_search(binary_warped):
     leftx_base = np.argmax(histogram[:midpoint])
     rightx_base = np.argmax(histogram[midpoint:]) + midpoint
 
-    nwindows = 11
+    nwindows = 9
     window_height = np.int(binary_warped.shape[0]/nwindows)
     
     margin = 100
@@ -88,7 +88,7 @@ def window_search(binary_warped):
     rightx_current = rightx_base
 
     
-    minpix = 40
+    minpix = 30
 
     # pixel index 담을 list
     left_lane_idx = []
@@ -140,7 +140,7 @@ def window_search(binary_warped):
     right_fit = np.polyfit(righty, rightx, 2)
     
     # 좌우 차선 별 2차 곡선 생성 
-    ploty = np.linspace(0, binary_warped.shape[0]-1, 5)
+    ploty = np.linspace(0, binary_warped.shape[0]-1, 3)
     
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
@@ -161,15 +161,16 @@ def window_search(binary_warped):
     # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
     # print("left lane idx: \n",max(left_lane_idx))
     # print(" idx: \n",left)
-    cv2.imshow("window search",out_img)
+    #cv2.imshow("window search",out_img)
     #return left_lane_idx, right_lane_idx, out_img, left, right, center
 
     curveleft, curveright = calc_curve(left_lane_idx, right_lane_idx, lanepixel_x, lanepixel_y)
-    print("curvature left: ", curveleft)
-    print("curvature left: ",curveright)
-    print("curvature : ",(curveleft+curveright)/2)
-
-    return left, right, center, left_fit, right_fit
+    # print("curvature left: ", curveleft)
+    # print("curvature left: ",curveright)
+    # print("curvature : ",(curveleft+curveright)/2)
+    curvature = (curveleft+curveright)/2
+ 
+    return left, right, center, left_fit, right_fit, curvature
 
 def calc_curve(left_lane_idx, right_lane_idx, lanepixel_x, lanepixel_y):
 	"""
