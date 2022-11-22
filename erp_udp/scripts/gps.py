@@ -17,6 +17,10 @@ user_ip = params["user_ip"]
 gps_port = params["gps_dst_port"]
 base = params_gps["KCity"]
 
+# center real point :  [[1.69868355e+01 1.10490804e+03 1.00000000e+00]
+#  [1.38470530e+01 1.09987173e+03 1.00000000e+00]
+#  [1.10110712e+01 1.09453162e+03 1.00000000e+00]]
+
 class GPS():
     def __init__(self, base):
         self.gps_parser=UDP_GPS_Parser(user_ip, gps_port,'GPRMC')

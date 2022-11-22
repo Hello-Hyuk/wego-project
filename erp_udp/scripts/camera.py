@@ -92,17 +92,18 @@ def main():
             lbc = lab_b_channel(bev_img)
             ib = imgblend(bev_img)
 
-            cv2.imshow("hsv",ib*255)
-            cv2.imshow("hsl",ht*255)
-            cv2.imshow("CIELAB",lbc*255)
+            # cv2.imshow("hsv",ib*255)
+            # cv2.imshow("hsl",ht*255)
+            # cv2.imshow("CIELAB",lbc*255)
             
             res2 = np.zeros_like(ht)
             res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 1
 
-            cv2.imshow("result",res2*255)
+            #cv2.imshow("result",res2*255)
+            
             # window search and get center point of lanes (bev)
             try :
-                left, right, center = window_search(res2)
+                left, right, center, left_fit, right_fit = window_search(res2)
             except TypeError:
                 continue
             
@@ -126,11 +127,17 @@ def main():
             origin_m = Tmatrix_2D(-ref_pos[0],-ref_pos[1])
             trans_m = Tmatrix_2D(position_x,position_y)
             rotation_m = Rmatrix_2D(theta)
+            
+            # y reference [1.61402593e+01 1.12134385e+03 1.00000000e+00]
+            # x reference [2.39775646e+01 1.12255222e+03 1.00000000e+00]
+            # reference [1.82075604e+01 1.12662159e+03 1.00000000e+00]
+            
+            center_wp =(pix2world(inv_mat, center,origin_m,rotation_m,trans_m))[0]
+            left_wp =(pix2world(inv_mat, left,origin_m,rotation_m,trans_m))[0]
+            right_wp =(pix2world(inv_mat, right,origin_m,rotation_m,trans_m))[0]
 
-            left_wp = pix2world(inv_mat, left,origin_m,rotation_m,trans_m)
-            right_wp =pix2world(inv_mat, right,origin_m,rotation_m,trans_m)
-            center_wp =pix2world(inv_mat, center,origin_m,rotation_m,trans_m)
-
+            print("offset",calc_vehicle_offset(img_cam,left_fit,right_fit))
+            print("way point ", center_wp)
             # waypoint generator
             if init_xy == False:
                 prev_x = position_x
@@ -138,12 +145,12 @@ def main():
                 init_xy = True
             
             # waypoint write to file
-            dist = np.sqrt((center_wp[0]-prev_x)**2+(center_wp[1]-prev_y)**2)
-            if dist > 0.3 :
-                data = '{0}\t{1}\t{2}\n'.format(center_wp[0],center_wp[1],position_z)
-                # f.write(data)
-                prev_x = center_wp[0]
-                prev_y = center_wp[1]
+            # dist = np.sqrt((center_wp[0]-prev_x)**2+(center_wp[1]-prev_y)**2)
+            # if dist > 0.3 :
+            #     data = '{0}\t{1}\t{2}\n'.format(center_wp[0],center_wp[1],position_z)
+            #     # f.write(data)
+            #     prev_x = center_wp[0]
+            #     prev_y = center_wp[1]
 
             # display
             inv_img = cv2.warpPerspective(bev_img, inv_mat, (img_w, img_h))

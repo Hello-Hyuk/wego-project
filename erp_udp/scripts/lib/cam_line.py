@@ -1,24 +1,28 @@
 import cv2
 import numpy as np
 import math
+import time
 from collections import deque
 pix = np.array([[73, 480],[277, 325],[360, 325],[563, 480]],np.float32)
 world_warp = np.array([[97,1610],[109,1610],[109,1606],[97,1606]],np.float32)
+# x12
+# y4 
+
 pix2world_m = cv2.getPerspectiveTransform(pix, world_warp)
 
 def pix2world(inv_mat, pix_point,origin_m,rm,trans_m):
-    
     trans_points = point_trans(pix_point,inv_mat)
-    uv = np.append(trans_points[0],1)[np.newaxis].T
+    homo_axis = np.ones((trans_points.shape[0],1))
+    uv = np.append(trans_points, homo_axis, axis=1).T
+    print("uv",uv)
     real_point = pix2world_m.dot(uv)
     real_point /= real_point[2]
-
-    origin_point = np.matmul(origin_m,real_point)
-    Rwaypoint = np.matmul(rm,origin_point)
-    waypoint = np.matmul(trans_m,Rwaypoint)
-    wp = np.squeeze(waypoint,1)
     
-    return wp
+    origin_point = np.matmul(origin_m,real_point)
+    R_worldpoint = np.matmul(rm,origin_point)
+    worldpoint = np.matmul(trans_m,R_worldpoint)
+    print("worldpoint : ",worldpoint)
+    return worldpoint.T
 
 def point_trans(points, inv_mat):
     real_x = []
@@ -65,9 +69,7 @@ def window_search(binary_warped):
     histogram = np.sum(binary_warped[int(bottom_half_y):,:], axis=0)
     #cv2.imshow("hist",histogram)
 
-
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
-    
 
     midpoint = np.int(histogram.shape[0]/2)
     leftx_base = np.argmax(histogram[:midpoint])
@@ -81,7 +83,6 @@ def window_search(binary_warped):
     lanepixel = binary_warped.nonzero()
     lanepixel_y = np.array(lanepixel[0])
     lanepixel_x = np.array(lanepixel[1])
-
     
     leftx_current = leftx_base
     rightx_current = rightx_base
@@ -113,7 +114,6 @@ def window_search(binary_warped):
         # 왼쪽 오른쪽 각 차선 픽셀이 window안에 있는 경우 index저장
         good_left_idx = ((lanepixel_y >= win_y_low) & (lanepixel_y < win_y_high) & (lanepixel_x >= win_xleft_low) & (lanepixel_x < win_xleft_high)).nonzero()[0]
         good_right_idx = ((lanepixel_y >= win_y_low) & (lanepixel_y < win_y_high) & (lanepixel_x >= win_xright_low) & (lanepixel_x < win_xright_high)).nonzero()[0]
-        #print("good",good_left_idx)
 
         # Append these indices to the lists
         left_lane_idx.append(good_left_idx)
@@ -140,7 +140,7 @@ def window_search(binary_warped):
     right_fit = np.polyfit(righty, rightx, 2)
     
     # 좌우 차선 별 2차 곡선 생성 
-    ploty = np.linspace(0, binary_warped.shape[0]-1, 3)
+    ploty = np.linspace(0, binary_warped.shape[0]-1, 5)
     
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
@@ -159,9 +159,55 @@ def window_search(binary_warped):
     cv2.polylines(out_img, [right], False, (0,255,0), thickness=5)
     cv2.polylines(out_img, [left], False, (0,0,255), thickness=5)
     # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
-    print("left lane idx: \n",left_lane_idx)
-    print(" idx: \n",left)
+    # print("left lane idx: \n",max(left_lane_idx))
+    # print(" idx: \n",left)
     cv2.imshow("window search",out_img)
     #return left_lane_idx, right_lane_idx, out_img, left, right, center
-    return left, right, center
-  
+
+    curveleft, curveright = calc_curve(left_lane_idx, right_lane_idx, lanepixel_x, lanepixel_y)
+    print("curvature left: ", curveleft)
+    print("curvature left: ",curveright)
+    print("curvature : ",(curveleft+curveright)/2)
+
+    return left, right, center, left_fit, right_fit
+
+def calc_curve(left_lane_idx, right_lane_idx, lanepixel_x, lanepixel_y):
+	"""
+	Calculate radius of curvature in enu position
+	"""
+	y_eval = 639  # 720p video/image, so last (lowest on screen) y index is 719
+
+	# Define conversions in x and y from pixels space to enu coord
+	ym_per_pix = 4/640 # enu coord per pixel in y dimension
+	xm_per_pix = 12/480 # enu coord per pixel in x dimension
+
+	# Extract left and right line pixel positions
+	leftx = lanepixel_x[left_lane_idx]
+	lefty = lanepixel_y[left_lane_idx]
+	rightx = lanepixel_x[right_lane_idx]
+	righty = lanepixel_y[right_lane_idx]
+
+	# Fit new polynomials to x,y in world space(enu coordinate)
+	left_fit_cr = np.polyfit(lefty*ym_per_pix, leftx*xm_per_pix, 2)
+	right_fit_cr = np.polyfit(righty*ym_per_pix, rightx*xm_per_pix, 2)
+	# Calculate the new radius of curvature
+	left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+	right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+
+	return left_curverad, right_curverad
+
+def calc_vehicle_offset(frame, left_fit, right_fit):
+	"""
+	Calculate vehicle offset from lane center, in enu position
+	"""
+	# Calculate vehicle center offset in pixels
+	bottom_y = frame.shape[0] - 1
+	bottom_x_left = left_fit[0]*(bottom_y**2) + left_fit[1]*bottom_y + left_fit[2]
+	bottom_x_right = right_fit[0]*(bottom_y**2) + right_fit[1]*bottom_y + right_fit[2]
+	vehicle_offset = frame.shape[1]/2 - (bottom_x_left + bottom_x_right)/2
+
+	# Convert pixel offset to enu coord
+	xm_per_pix = 12/480 # enu coord per pixel in x dimension
+	vehicle_offset *= xm_per_pix
+
+	return vehicle_offset
