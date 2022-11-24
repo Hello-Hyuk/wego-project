@@ -67,7 +67,7 @@ class CAM():
     def camera_call_back(self):
         img_cam = self.udp_cam.raw_img
         # 이미지 w, h 추출
-        bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
+        bev_img, _, _ = bird_eye_view(img_cam, bev_roi, warp_dst)
         
         # thresh hold
         ht = hls_thresh(bev_img)
@@ -76,14 +76,20 @@ class CAM():
         
         res2 = np.zeros_like(ht)
         res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 1
-        self.img = res2*255
+        
         try :
-            left, right, center, left_fit, right_fit, self.curvature = window_search(res2)
+            _, _, _, leftx, lefty, rightx, righty = window_search(res2)
         except TypeError:
             pass
         
-        self.ego_offset = calc_vehicle_offset(img_cam,left_fit,right_fit)
+        # curvature
+        curveleft, curveright = calc_curve(leftx, lefty, rightx, righty)
+        self.curvature = (curveleft+curveright)/2
         
+        # ego offset
+        self.ego_offset = calc_vehicle_offset(img_cam,leftx, lefty, rightx, righty)
+        
+        # steering
         if self.ego_offset > 0 :
             self.steer = -math.atan(self.curvature)
         else:
