@@ -23,45 +23,47 @@ class LIDAR():
         self.udp_lidar = UDP_LIDAR_Parser(user_ip, lidar_port, params_lidar=params_lidar)
         self.pcd_info = PCD()
         self.n_clusters = 0
-        self.cluster_coords = None  
+        self.cluster_coords = None
+        self.is_object = False
         
     def lidar_call_back(self):
-            ######## lidar data
-            x=self.udp_lidar.x
-            y=self.udp_lidar.y
-            z=self.udp_lidar.z
+        ######## lidar data
+        x=self.udp_lidar.x
+        y=self.udp_lidar.y
+        z=self.udp_lidar.z
 
-            #raw point cloud (57600, 3)
-            points = np.concatenate([
-                x.reshape([-1, 1]),
-                y.reshape([-1, 1]),
-                z.reshape([-1, 1])
-            ], axis=1).T.astype(np.float32)
-            #point cloud (3,57600)
-            #print("point clouds",points,points.shape)
+        #raw point cloud (57600, 3)
+        points = np.concatenate([
+            x.reshape([-1, 1]),
+            y.reshape([-1, 1]),
+            z.reshape([-1, 1])
+        ], axis=1).T.astype(np.float32)
+        #point cloud (3,57600)
+        #print("point clouds",points,points.shape)
 
-            #numpy to point cloud data
-            self.pcd_info.point_np2pcd(points)
-            self.pcd_info.get_origin_point(points)
-            #voxelize
-            self.pcd_info.Voxelize()
+        #numpy to point cloud data
+        self.pcd_info.point_np2pcd(points)
+        self.pcd_info.get_origin_point(points)
+        #voxelize
+        self.pcd_info.Voxelize()
+        
+        height,width = 15,3
+        #ROI filtering
+        self.pcd_info.ROI_filtering(height,width)
+        
+        # DBscan clustering
+        if self.pcd_info.pcd.points :
+            # points shape (,3)
+            #self.pcd_info.Display_pcd(self.pcd_info.pcd)
+            self.n_clusters, self.cluster_coords = self.pcd_info.o3d_DBscan()
+            self.is_object = True
+            # time.sleep(1)
+        else : 
+            self.n_clusters, self.cluster_coords = 0, None
+            self.is_object = False
+            # time.sleep(1)
             
-            height,width = 15,3
-            #ROI filtering
-            self.pcd_info.ROI_filtering(height,width)
-            
-            # DBscan clustering
-            if self.pcd_info.pcd.points :
-                # points shape (,3)
-                #self.pcd_info.Display_pcd(self.pcd_info.pcd)
-                self.n_clusters, self.cluster_coords = self.pcd_info.o3d_DBscan()
-                
-                time.sleep(1)
-            else : 
-                self.n_clusters, self.cluster_coords = 0, None
-                time.sleep(1)
-                pass
-    
+
     def display_info(self):
         print(f"number of point cloud data : {self.pcd_info.pcd_np.shape}")
         print(f"number of cluster : {self.n_clusters}\ncluster coordinate :\n{self.cluster_coords}")
@@ -209,7 +211,7 @@ def DBscan(self):
     for label in range(len(set(labels[labels!=-1]))):
         idx = np.where(labels==label)
         center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
-        
+    print("afaffa",center_point)
     center_points_np = np.array(center_point)
     center_points_np = np.squeeze(center_points_np)
     
