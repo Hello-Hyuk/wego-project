@@ -1,30 +1,23 @@
 from camera_class import CAM
 from lib.morai_udp_parser import udp_parser,udp_sender
-import cv2
 import time
 import threading
 import os,json
 
-
 path = os.path.dirname( os.path.abspath( __file__ ) )  # current file's path
-
 
 with open(os.path.join(path,("params.json")),'r') as fp :  # current path + file name
     params = json.load(fp) 
-
 
 params=params["params"]
 user_ip = params["user_ip"]
 host_ip = params["host_ip"]
 
-
 class lkas :
-
     def __init__(self):
         self.status=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
         self.ctrl_cmd=udp_sender(host_ip,params["ctrl_cmd_host_port"],'erp_ctrl_cmd')
         
-        self.cnt = []
         self._is_status=False
         while not self._is_status :
             if not self.status.get_data() :
@@ -52,13 +45,10 @@ class lkas :
         accel=0
         brake=0
         self.cam.display_info()
-        self.cnt.append(self.cam.ego_offset)
-        # print(len(self.cnt))
-        # if abs(self.cam.ego_offset) > 2.5:
-        #     self.cam.ego_offset = 0
+
+        # 차량이 중앙으로부터 1.3m 이상 멀어지면 차선 이탈 방지를 위해 steering 
         if abs(self.cam.ego_offset) > 1.3:
-            self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,self.cam.steer*0.1])
-            self.cnt = []
+            self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,steer*0.1])
         else : 
             self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,0])
             

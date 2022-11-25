@@ -1,14 +1,6 @@
-from inspect import ismethoddescriptor
-from msilib.schema import RemoveIniFile
-import socket
-from traceback import print_tb
-from turtle import position
-from wave import Wave_write
+
 import cv2
 import numpy as np
-import time
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from lib.morai_udp_parser import udp_parser
 from lib.cam_util import UDP_CAM_Parser
 from lib.image_filter import *
@@ -101,7 +93,7 @@ def main():
             
             # window search and get center point of lanes (bev)
             try :
-                left, right, center, _, _, _, _ = window_search(res2)
+                left, right, center, _,_,_,_ = window_search(res2)
             except TypeError:
                 continue
             

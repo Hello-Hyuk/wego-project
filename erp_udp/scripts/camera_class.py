@@ -89,7 +89,7 @@ class CAM():
         # ego offset
         self.ego_offset = calc_vehicle_offset(img_cam,leftx, lefty, rightx, righty)
         
-        # steering
+        # offset의 좌우에 따라 반대방향으로 steering 
         if self.ego_offset > 0 :
             self.steer = -math.atan(self.curvature)
         else:

@@ -2,9 +2,7 @@ from lidar import LIDAR
 from lib.morai_udp_parser import udp_parser,udp_sender
 import math
 import time
-import threading
 import os,json
-
 
 path = os.path.dirname( os.path.abspath( __file__ ) )  # current file's path
 
@@ -16,8 +14,7 @@ params=params["params"]
 user_ip = params["user_ip"]
 host_ip = params["host_ip"]
 
-
-class ADAS :
+class E_STOP :
 
     def __init__(self,params_lidar):
         self.status=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
@@ -55,6 +52,7 @@ class ADAS :
             brake=0
             self.lidar.display_info()
             
+            # 긴급제동 거리 8m로 제한
             if self.distance and min(self.distance) < 8.0:
                 self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,0,acceleration,accel,10,0])
             else : 
@@ -62,6 +60,6 @@ class ADAS :
             
 
 if __name__ == "__main__":
-    adas = ADAS(params_lidar)
+    adas = E_STOP(params_lidar)
     while True :
         adas.main_loop()

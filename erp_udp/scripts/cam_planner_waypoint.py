@@ -9,7 +9,6 @@ import time
 import threading
 import os,json
 
-
 path = os.path.dirname( os.path.abspath( __file__ ) )
 
 with open(os.path.join(path,("params.json")),'r') as fp :
@@ -19,7 +18,6 @@ params=params["params"]
 
 user_ip = params["user_ip"]
 host_ip = params["host_ip"]
-
 
 class planner :
 
@@ -35,7 +33,6 @@ class planner :
         self.global_path=self.txt_reader.read('lkas.txt')
 
         self.pure_pursuit=purePursuit()
-  
 
         self._is_status=False
         while not self._is_status :
@@ -48,8 +45,6 @@ class planner :
 
         self.main_loop()
 
-
-    
     def main_loop(self):
         self.timer=threading.Timer(0.001,self.main_loop)
         self.timer.start()

@@ -1,16 +1,21 @@
 import cv2
 import numpy as np
 
+# [x,y] 
 pix = np.array([[73, 480],[277, 325],[360, 325],[563, 480]],np.float32)
 world_warp = np.array([[97,1610],[109,1610],[109,1606],[97,1606]],np.float32)
 pix2world_m = cv2.getPerspectiveTransform(pix, world_warp)
+# x12 # y4 
 
-
-# x12
-# y4 
+def meter_per_pixel():
+    pix_x = 640
+    pix_y = 480
+    meter_y = np.sum((world_warp[0]-world_warp[1])**2)
+    meter_x = np.sum((world_warp[0]-world_warp[3])**2)
+    return meter_x/pix_x, meter_y/pix_y  
 
 def pix2world(inv_mat, pix_point,origin_m,rm,trans_m):
-    """sliding window를 통해 
+    """sliding window를 통해 얻은 좌표를 행렬 연산을 통해 world좌표로 변환
 
     Args:
         inv_mat (np.array): 조감도 영역에서 원래 카메라 시점으로 변환 하기위한 행렬
@@ -50,8 +55,6 @@ def point_trans(pix_points, inv_mat):
     real_y = []
     # point transformation : bev 2 original pixel
     for point in pix_points:
-        #cv2.line(bev_img, (point[0],point[1]),(point[0],point[1]), (255,229,207), thickness=30)
-
         bp = np.append(point,1)
         a = (bp[np.newaxis]).T
         real_point = inv_mat.dot(a)
@@ -157,12 +160,11 @@ def window_search(binary_warped):
     out_img[lanepixel_y[left_lane_idx], lanepixel_x[left_lane_idx]] = (0, 0, 0)
     out_img[lanepixel_y[right_lane_idx], lanepixel_x[right_lane_idx]] =(0, 0, 0)
 
-    # 차선 및 중심 lane display
+    # 양쪽 차선 및 중심 선 pixel 좌표(x,y)로 변환
     center = np.asarray(tuple(zip(center_fitx, ploty)), np.int32)
     right = np.asarray(tuple(zip(right_fitx, ploty)), np.int32)
     left = np.asarray(tuple(zip(left_fitx, ploty)), np.int32)
-   
-    #print(right)
+
     cv2.polylines(out_img, [right], False, (0,255,0), thickness=5)
     cv2.polylines(out_img, [left], False, (0,0,255), thickness=5)
     # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
@@ -187,13 +189,13 @@ def calc_curve(leftx, lefty, rightx, righty):
     """
     y_eval = 639  # 720p video/image, so last (lowest on screen) y index is 719
 
-	# Define conversions in x and y from pixels space to enu coord
-    ym_per_pix = 4/640 # enu coord per pixel in y dimension
-    xm_per_pix = 12/480 # enu coord per pixel in x dimension
+	# Define conversions in x and y from pixels to meter
+    # meter per pixel in each x, y dimension
+    xm_per_pix, ym_per_pix = meter_per_pixel() 
 
 	# Extract left and right line pixel positions
 
-	# Fit new polynomials to x,y in world space(enu coordinate)
+	# Fit new polynomials to x,y in world space(meterinate)
     left_fit_cr = np.polyfit(lefty*ym_per_pix, leftx*xm_per_pix, 2)
     right_fit_cr = np.polyfit(righty*ym_per_pix, rightx*xm_per_pix, 2)
     # Calculate the new radius of curvature
@@ -225,14 +227,24 @@ def calc_vehicle_offset(frame, leftx, lefty, rightx, righty):
     bottom_x_right = right_fit[0]*(bottom_y**2) + right_fit[1]*bottom_y + right_fit[2]
     vehicle_offset = frame.shape[1]/2 - (bottom_x_left + bottom_x_right)/2
 
-    # Convert pixel offset to enu coord
-    xm_per_pix = 12/480 # enu coord per pixel in x dimension
+    # Convert pixel offset to meter
+    xm_per_pix, _ = meter_per_pixel() 
     vehicle_offset *= xm_per_pix
 
     return vehicle_offset
 
 def visual_SLAM(map, left_wp, right_wp):
-    
+    """sliding window를 통해 얻은  pixel을 world 좌표로 변환 후 
+    양 차선을 기반으로 map을 그리는 함수
+
+    Args:
+        map (np.array): simulation map의 실제좌표를 담기 위한 맵
+        left_wp (np.array): 왼쪽 차선 실제 좌표
+        right_wp (np.array): 왼쪽 차선 실제 좌표
+
+    Returns:
+        np.array: simulation map
+    """
     int_lwp = left_wp.astype(int)
     int_rwp = right_wp.astype(int)
             

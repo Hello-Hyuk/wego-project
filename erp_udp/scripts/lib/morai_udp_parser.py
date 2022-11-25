@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 import struct
+
 class udp_parser :
     def __init__(self,ip,port,data_type):
         self.data_type=data_type
@@ -14,15 +15,10 @@ class udp_parser :
         thread.daemon = True 
         thread.start() 
 
-    
-
     def recv_udp_data(self):
         while True :
             raw_data, sender = self.sock.recvfrom(self.data_size)
             self.data_parsing(raw_data)
-
-
-
 
     def data_parsing(self,raw_data) :
         #################################################################################### erp

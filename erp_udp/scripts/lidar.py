@@ -3,7 +3,6 @@ import time
 from lib.lidar_util import UDP_LIDAR_Parser
 from lib.morai_udp_parser import udp_parser
 import os,json
-from sklearn.cluster import dbscan
 import open3d as o3d
 
 path = os.path.dirname( os.path.abspath( __file__ ) )
@@ -79,7 +78,6 @@ class PCD:
         self.pcd_np = points_np.T        
         self.origin_pcd.points = o3d.utility.Vector3dVector(self.pcd_np)
 
-    
     def point_np2pcd(self, points_np):
         self.pcd_np = points_np.T        
         self.pcd.points = o3d.utility.Vector3dVector(self.pcd_np)
@@ -154,80 +152,46 @@ class PCD:
         return pcd_bbox_center_np, pcd_bbox
         
     def o3d_DBscan(self):
-            # create model and prediction
-            self.labels = self.pcd.cluster_dbscan(eps=1.0, min_points=10)
-            # Number of clusters in labels, ignoring noise if present.
-            n_clusters_ = len(set(self.labels)) - (1 if -1 in self.labels else 0)
-            n_noise_ = list(self.labels).count(-1)
-            self.labels = np.asarray(self.labels)
-            
-            center_point = []
-            pcd_center = []
-            pcd_bbox = []
-            for label in range(len(set(self.labels[self.labels!=-1]))):
-                idx = np.where(self.labels==label)
-                center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
-                pc, pb = self.get_pcd_center(idx)
-                pcd_center.append(pc)
-                pcd_bbox.append(pb)
-          
-            center_points_np = np.array(center_point)
-            pcd_center_np = np.array(pcd_center)
-            center_points_np = np.squeeze(center_points_np)
+        """DBscan을 통해 roi영역의 pointcloud를 clustering하여 객체 검출
 
-            # (n,3)
-            # print(pcd_center_np.shape)
-            # print(center_points_np.shape)
-            
-            if pcd_center_np.shape[0] == 1:
-                pcd_center_sorted = pcd_center_np
-            else :
-                try : pcd_center_sorted = pcd_center_np[pcd_center_np[:,1].argsort()]
-                # Morai respwan bug exception
-                except IndexError:
-                    pcd_center_sorted = pcd_center_np
-                    
-            # if len(center_points_np) == 3:
-            #     center_points_sorted = center_points_np
-            # else :
-            #     try : center_points_sorted = center_points_np[center_points_np[:,1].argsort()]
-            #     # Morai respwan bug exception
-            #     except IndexError:
-            #         center_points_sorted = center_points_np
-                    
-            # print(set(labels))
-            # print("Estimated number of clusters: %d" % n_clusters_)
-            # print("Estimated number of noise points: %d" % n_noise_)
-            return n_clusters_, pcd_center_sorted
+        Returns:
+            n_clusters_(int) : clustering 개수
+            pcd_center_sorted(np.array) : clustering 의 중점 좌표 
+        """
+        # create model and prediction
+        self.labels = self.pcd.cluster_dbscan(eps=1.0, min_points=10)
+        # Number of clusters in labels, ignoring noise if present.
+        n_clusters_ = len(set(self.labels)) - (1 if -1 in self.labels else 0)
+        n_noise_ = list(self.labels).count(-1)
+        self.labels = np.asarray(self.labels)
         
-def DBscan(self):
-    # create model and prediction
-    centroid, labels = dbscan(self.pcd_np, eps=1.0, min_samples=10)
-    # Number of clusters in labels, ignoring noise if present.
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
-    
-    center_point = []
-    for label in range(len(set(labels[labels!=-1]))):
-        idx = np.where(labels==label)
-        center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
-    print("afaffa",center_point)
-    center_points_np = np.array(center_point)
-    center_points_np = np.squeeze(center_points_np)
-    
-    if len(center_points_np) == 3:
-        center_points_sorted = center_points_np
-    else :
-        try : center_points_sorted = center_points_np[center_points_np[:,1].argsort()]
-        # Morai respwan bug exception
-        except IndexError:
-            center_points_sorted = center_points_np
-            
-    # print(set(labels))
-    # print("Estimated number of clusters: %d" % n_clusters_)
-    # print("Estimated number of noise points: %d" % n_noise_)
-    return n_clusters_, center_points_sorted
+        center_point = []
+        pcd_center = []
+        pcd_bbox = []
+        for label in range(len(set(self.labels[self.labels!=-1]))):
+            idx = np.where(self.labels==label)
+            center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
+            pc, pb = self.get_pcd_center(idx)
+            pcd_center.append(pc)
+            pcd_bbox.append(pb)
+        
+        center_points_np = np.array(center_point)
+        pcd_center_np = np.array(pcd_center)
+        center_points_np = np.squeeze(center_points_np)
 
+        # (n,3)
+        # print(pcd_center_np.shape)
+        # print(center_points_np.shape)
+        
+        if pcd_center_np.shape[0] == 1:
+            pcd_center_sorted = pcd_center_np
+        else :
+            try : pcd_center_sorted = pcd_center_np[pcd_center_np[:,1].argsort()]
+            # Morai respwan bug exception
+            except IndexError:
+                pcd_center_sorted = pcd_center_np
+                
+        return n_clusters_, pcd_center_sorted
 
 def main():
     lidar = LIDAR(params_lidar)

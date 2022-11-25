@@ -36,7 +36,6 @@ class planner :
 
         self.pure_pursuit=purePursuit()
   
-
         self._is_status=False
         while not self._is_status :
             if not self.status.get_data() :
@@ -45,10 +44,7 @@ class planner :
             else :
                 self._is_status=True
 
-
         self.main_loop()
-
-
     
     def main_loop(self):
         self.timer=threading.Timer(0.001,self.main_loop)
