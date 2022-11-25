@@ -32,7 +32,7 @@ class planner :
         self.set_traffic=udp_sender(host_ip,params["set_traffic_host_port"],'set_traffic')
 
         self.txt_reader=pathReader()
-        self.global_path=self.txt_reader.read('lane_path.txt')
+        self.global_path=self.txt_reader.read('kcity.txt')
 
         self.pure_pursuit=purePursuit()
   
