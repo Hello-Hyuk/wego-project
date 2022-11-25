@@ -60,7 +60,7 @@ def main():
     cnt = 0
     #CreateTrackBar_Init()
     file_path=os.path.dirname( os.path.abspath( __file__ ) )
-    file_path = os.path.normpath(os.path.join(file_path, '../..'))
+    file_path = os.path.normpath(os.path.join(file_path, '../../..'))
 
     full_path = file_path+'/'+path_folder_name+'/'+path_file_name
     #f=open(full_path, 'a')

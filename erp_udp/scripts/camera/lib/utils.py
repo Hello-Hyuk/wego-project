@@ -12,7 +12,7 @@ class pathReader :
 
     def __init__(self):
        self.file_path=os.path.dirname( os.path.abspath( __file__ ) )
-       self.file_path = os.path.normpath(os.path.join(self.file_path, '../..'))
+       self.file_path = os.path.normpath(os.path.join(self.file_path, '../../..'))
  
 
 
