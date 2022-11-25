@@ -9,10 +9,10 @@ import time
 import threading
 import os,json
 
-path = os.path.dirname( os.path.abspath( __file__ ) )
+path = os.path.dirname( os.path.abspath( __file__ ) )  # current file's path
 
-with open(os.path.join(path,("params.json")),'r') as fp :
-    params = json.load(fp)
+with open(os.path.join(path,("params.json")),'r') as fp :  # current path + file name
+    params = json.load(fp) 
 
 params=params["params"]
 

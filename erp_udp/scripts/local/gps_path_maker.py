@@ -23,7 +23,7 @@ class path_maker :
     def __init__(self,base):
         self.status=udp_parser(user_ip, status_port,'erp_status')
         self.file_path=os.path.dirname( os.path.abspath( __file__ ) )
-        self.file_path = os.path.normpath(os.path.join(self.file_path, '..'))
+        self.file_path = os.path.normpath(os.path.join(self.file_path, '../..'))
         self.gps_parser=GPS(base)
         
         self.full_path = self.file_path+'/'+path_folder_name+'/'+ 'gps_path.txt'
