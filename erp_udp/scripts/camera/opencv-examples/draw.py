@@ -1,4 +1,3 @@
-from inspect import ismethoddescriptor
 import cv2
 import numpy as np
 

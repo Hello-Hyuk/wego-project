@@ -1,7 +1,9 @@
 import cv2
 import numpy as np
 
-src = cv2.imread("D:\dev\wego-project\erp_udp/bookcode\img/lena512.bmp", 1)
+path = "erp_udp/scripts/camera/opencv-examples/img/"
+
+src = cv2.imread(path + "lena512.bmp", 1)
 
 height, width, channel = src.shape
 
@@ -61,7 +63,6 @@ cv2.imshow("affine transformation", a_dst)
 cv2.imshow("perspective transformation", p_dst)
 cv2.waitKey()
 cv2.destroyAllWindows()
-
 
 # display 용
 rst1 = cv2.hconcat([src,a_dst])

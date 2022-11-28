@@ -2,8 +2,9 @@ import cv2
 from ipykernel import kernel_protocol_version
 import numpy as np
 
-lena_img = "D:/dev/wego-project/erp_udp/opencv-examples/img/lena512.bmp"
-medical_img = "D:/dev/wego-project/erp_udp/opencv-examples/img/medical.jpeg"
+path = "erp_udp/scripts/camera/opencv-examples/img/"
+lena_img = path + "lena512.bmp"
+medical_img = path + "medical.jpeg"
 
 # 영상 불러오기
 lena_color = cv2.imread(lena_img,1)

@@ -50,6 +50,7 @@ def main():
             position_z=round(status_data[14],5)
             heading = round(status_data[17],5)
             
+            # print infomation
             print('sim x : {0} , y : {1}, heading : {2}'.format(position_x,position_y,heading))
             print('my x : {0} , y : {1}'.format(gps.x,gps.y))
             print('Lat : {0} , Long : {1}'.format(gps.gps_parser.parsed_data[0], gps.gps_parser.parsed_data[1]))

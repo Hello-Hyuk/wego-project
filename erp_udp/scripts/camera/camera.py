@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 from lib.morai_udp_parser import udp_parser
@@ -48,8 +47,6 @@ ref_pos = [95.91738891601562,1608.2139892578125,1]
 #[503   0]
 #[503 480]
 
-
-
 def main():
     obj=udp_parser(user_ip, params["object_info_dst_port"],'erp_obj')
     ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
@@ -69,12 +66,13 @@ def main():
 
             #obj data
             img_cam = udp_cam.raw_img
+            cv2.imshow("img",img_cam)
             # 이미지 w, h 추출
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
 
             #draw roi
-            #draw_roi(img_cam, bev_roi, warp_dst)
+            draw_roi(img_cam, bev_roi, warp_dst)
 
             # color thresh
             cv2.imshow("bev",bev_img)

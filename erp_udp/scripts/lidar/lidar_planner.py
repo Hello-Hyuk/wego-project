@@ -23,6 +23,8 @@ class E_STOP :
         self.cnt = []
         self._is_status=False
         self.distance = []
+        # 거리 임계값
+        self.dist_thresh = 8.0
         
         while not self._is_status:
             if not self.status.get_data() :
@@ -53,7 +55,7 @@ class E_STOP :
             self.lidar.display_info()
             
             # 긴급제동 거리 8m로 제한
-            if self.distance and min(self.distance) < 8.0:
+            if self.lidar.is_object and min(self.distance) < self.dist_thresh:
                 self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,0,acceleration,accel,10,0])
             else : 
                 self.ctrl_cmd.send_data([ctrl_mode,Gear,cmd_type,send_velocity,acceleration,accel,brake,0])

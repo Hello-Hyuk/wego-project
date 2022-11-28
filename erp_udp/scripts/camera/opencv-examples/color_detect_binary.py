@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-path = "D:/dev/wego-project/erp_udp/bookcode/img"
+path = "erp_udp/scripts/camera/opencv-examples/img/"
 image = "hsv.png"
 win_name = "color_detect_hsv"
 

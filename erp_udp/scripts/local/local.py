@@ -1,6 +1,5 @@
 from gps import GPS
 from imu import IMU
-import os,json
 
 class LOCAL():
     def __init__(self,base):
