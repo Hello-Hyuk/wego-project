@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 # [x,y] 
 pix = np.array([[73, 480],[277, 325],[360, 325],[563, 480]],np.float32)
@@ -78,8 +79,10 @@ def window_search(binary_warped):
     # Take a histogram of the bottom half of the image
     bottom_half_y = binary_warped.shape[0]/2
     histogram = np.sum(binary_warped[int(bottom_half_y):,:], axis=0)
-    #cv2.imshow("hist",histogram)
-
+    
+    # show histogram
+    #show_hist(histogram)
+    
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
 
     midpoint = np.int(histogram.shape[0]/2)
@@ -170,10 +173,14 @@ def window_search(binary_warped):
     # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
     # print("left lane idx: \n",max(left_lane_idx))
     # print(" idx: \n",left)
-    #cv2.imshow("window search",out_img)
+    cv2.imshow("window search",out_img)
     #return left_lane_idx, right_lane_idx, out_img, left, right, center
 
     return left, right, center, leftx, lefty, rightx, righty
+
+def show_hist(histogram):
+    plt.plot(np.arange(640),histogram)
+    plt.show()
 
 def calc_curve(leftx, lefty, rightx, righty):
     """morai simulation상의 차선의 간격(enu 좌표)을 통해 simulation상의 곡률을 구하는 함수

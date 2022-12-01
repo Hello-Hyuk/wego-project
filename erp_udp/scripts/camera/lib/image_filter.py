@@ -2,25 +2,6 @@ import cv2
 import numpy as np
 import math
 
-#hsv tracker
-def hsv_track(frame):
-    
-    Lower_H_Value = cv2.getTrackbarPos("LH", "lane")
-    Lower_S_Value = cv2.getTrackbarPos("LS", "lane")
-    Lower_V_Value = cv2.getTrackbarPos("LV", "lane")
-    Upper_H_Value = cv2.getTrackbarPos("UH", "lane")
-    Upper_S_Value = cv2.getTrackbarPos("US", "lane")
-    Upper_V_Value = cv2.getTrackbarPos("UV", "lane")
-    
-    lower = np.array([Lower_H_Value,Lower_S_Value,Lower_V_Value])
-    upper = np.array([Upper_H_Value,Upper_S_Value,Upper_V_Value])
-    
-    mask = cv2.inRange(frame, lower, upper)
-
-    res = cv2.bitwise_and(frame,frame, mask= mask)
-
-    return res
-
 def imgblend(frame):
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
@@ -127,7 +108,6 @@ def sobel_thresh(img, sobel_kernel=3, orient='x', thresh_min=20, thresh_max=100)
     grad_bin[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
     
     return grad_bin
-
 
 def mag_thresh(img, sobel_kernel=3, thresh_min=100, thresh_max=255):
     # Convert to grayscale

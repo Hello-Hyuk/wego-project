@@ -54,6 +54,7 @@ for point in srcPoint:
     p_point /= p_point[2]
     print(f"\n = {p_point}\n")
     # row 3의 값을 삭제
+    
     p_point = np.delete(p_point, 2)
     
     cv2.circle(p_dst,(p_point).astype(int),10,[255,255,255],-1)
@@ -68,14 +69,14 @@ cv2.destroyAllWindows()
 rst1 = cv2.hconcat([src,a_dst])
 rst2 = cv2.hconcat([src,p_dst])
 
-srcp = (srcPoint.astype(int)).tolist()
-dstp = (dstPoint.astype(int)).tolist()
+src_point = (srcPoint.astype(int)).tolist()
+dst_point = (dstPoint.astype(int)).tolist()
 
-for sp,dp in zip(srcp,dstp):
-    print(srcp.index(sp))
-    if srcp.index(sp) < 4:
+for sp,dp in zip(src_point,dst_point):
+    print(src_point.index(sp))
+    if src_point.index(sp) < 4:
         cv2.line(rst2,(sp[0],sp[1]),(dp[0]+width,dp[1]),[0,0,255],5)
-    if srcp.index(sp) < 3:
+    if src_point.index(sp) < 3:
         cv2.line(rst1,(sp[0],sp[1]),(dp[0]+width,dp[1]),[0,0,255],5)
     
 cv2.imshow("affine transformation", rst1)

@@ -47,7 +47,7 @@ pts2 = np.array([[450, 200], [500, 150], [500, 230]])
 grayscale[0:50,50:100]=255
 grayscale[50:100,100:150]=200
 grayscale[100:150,150:200]=150
-# x, y
+# (x, y)
 cv2.line(grayscale,(100,200),(300,400),gray,5)
 cv2.line(grayscale,(200,200),(200,200),white,5)
 cv2.circle(grayscale,(300,400),50,white,4)
@@ -58,17 +58,21 @@ cv2.putText(grayscale,"Hello World",(220,100),cv2.FONT_HERSHEY_COMPLEX,2,white,3
 
 cv2.imshow("gray",grayscale)
 cv2.waitKey()
+####################################################################################
 
-
+pts1 = np.array([[400, 150], [450, 150], [420, 250]])
+pts2 = np.array([[450, 200], [500, 150], [500, 230]])
 
 ### color
 # index 접근 (y, x)
 color[60,110] = green
 color[0:50,50:100]=blue
 cv2.imshow("index",color)
-color[50:100,100:150]=green
-color[100:150,150:200]=red
-# cv2 function
+cv2.waitKey()
+color[50:100,100:150] = green
+color[100:150,150:200] = red
+color[200:400,100:105] = blue
+# cv2 function (x,y)
 cv2.line(color,(100,200),(300,400),blue,5)
 cv2.line(color,(200,200),(200,200),green,5)
 cv2.circle(color,(300,400),50,red,4)

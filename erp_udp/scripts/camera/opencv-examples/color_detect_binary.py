@@ -29,13 +29,13 @@ def hsv_track(frame):
     Upper_V_Value = cv2.getTrackbarPos("UV", win_name)
     
     # hsv영역으로의 색영역 전환
-    cvt_hsv = cv2.cvtColor(color,cv2.COLOR_BGR2HSV)
+    cvt_hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
     # 임계값 boundary 정의
     lower = np.array([Lower_H_Value,Lower_S_Value,Lower_V_Value])
     upper = np.array([Upper_H_Value,Upper_S_Value,Upper_V_Value])
     mask = cv2.inRange(cvt_hsv, lower, upper)
-    
+    cv2.imshow("mask",mask)
     # 구한 mask와 hsv영상을 연산하여 mask 범위의 색만 추출
     res = cv2.bitwise_and(cvt_hsv,cvt_hsv, mask= mask)
 
@@ -63,7 +63,8 @@ if __name__ == "__main__":
     bin = cv2.cvtColor(color_detect_hsv,cv2.COLOR_BGR2GRAY) 
 
     # img binary 화
-    ret, bin_th = cv2.threshold(bin,50,1,cv2.THRESH_BINARY)
+    bin_th = 50
+    ret, bin_img = cv2.threshold(bin,bin_th,1,cv2.THRESH_BINARY)
     # 디스플레이
     # np array를 string으로 변경 (디스플레이용)
     lower_string = ','.join(str(e) for e in lower.tolist())
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     cv2.putText(conv,upper_string,(0,40),cv2.FONT_HERSHEY_SIMPLEX,0.6,(255,255,255))
     
     cv2.imshow("converted img",conv)
-    cv2.imshow("binary img",bin_th*255)
+    cv2.imshow("binary img",bin_img*255)
 
     cv2.waitKey()
     cv2.destroyAllWindows()

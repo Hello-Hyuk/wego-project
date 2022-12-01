@@ -28,6 +28,7 @@ class IMU():
         self.pitch = np.rad2deg(p)
         self.heading = np.rad2deg(y)
         
+        
 def main():
     imu = IMU()
     ego=udp_parser(user_ip, params["vehicle_status_dst_port"],'erp_status')
