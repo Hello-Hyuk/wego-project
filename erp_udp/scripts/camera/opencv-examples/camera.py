@@ -14,7 +14,7 @@ while cv2.waitKey(33) != ord('q'):
         print("cam not opened\n")
         break
     cv2.imshow("VideoFrame", frame)
-
+    
 # 카메라 해제
 capture.release()
 cv2.destroyAllWindows()

@@ -1,5 +1,4 @@
 import cv2
-from ipykernel import kernel_protocol_version
 import numpy as np
 
 path = "erp_udp/scripts/camera/opencv-examples/img/"
@@ -14,6 +13,8 @@ gray = cv2.cvtColor(lena_color,cv2.COLOR_BGR2GRAY)
 ### filter 2d
 # 필터 마스크 생성
 kernel = np.ones((5,5),np.float32) /25
+
+
 f2d = cv2.filter2D(lena_color,-1,kernel) # -1은 입력 영상과 동일한 데이터의 출력 영상 생성
 
 ### gaussian filtering 

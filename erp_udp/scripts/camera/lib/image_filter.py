@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import math
 
-def imgblend(frame):
+def hsv(frame):
     frame = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
 
     # yellow 임계값 설정 후 mask 생성

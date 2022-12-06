@@ -9,7 +9,7 @@ height, width, channel = src.shape
 
 # 변환할 좌표와 목적 좌표를 순서에 맞게 정의
 srcPoint = np.array([[300, 200], [400, 200], [500, 500], [200, 500]], dtype=np.float32)
-dstPoint = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32)
+dstPoint = np.array([[0, 0], [512, 0], [512,512], [0, 512]], dtype=np.float32)
 
 # affine transformation matrix 구하기 (2 x 3) 행렬  
 a_matrix = cv2.getAffineTransform(srcPoint[:3],dstPoint[:3]) 

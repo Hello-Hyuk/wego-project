@@ -30,7 +30,7 @@ def hsv_track(frame):
     
     # hsv영역으로의 색영역 전환
     cvt_hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-
+    
     # 임계값 boundary 정의
     lower = np.array([Lower_H_Value,Lower_S_Value,Lower_V_Value])
     upper = np.array([Upper_H_Value,Upper_S_Value,Upper_V_Value])
@@ -39,7 +39,7 @@ def hsv_track(frame):
     # 구한 mask와 hsv영상을 연산하여 mask 범위의 색만 추출
     res = cv2.bitwise_and(cvt_hsv,cvt_hsv, mask= mask)
 
-    return res, lower, upper
+    return res, lower, upper, cvt_hsv
 
 if __name__ == "__main__":
     # 영상 불러오기
@@ -49,9 +49,10 @@ if __name__ == "__main__":
     create_trackbar_init()
     while cv2.waitKey(1) != ord('q'):
 
-        color_detect_hsv, lower, upper = hsv_track(color)
+        color_detect_hsv, lower, upper, cvt_hsv = hsv_track(color)
         conv = cv2.cvtColor(color_detect_hsv,cv2.COLOR_HSV2BGR)
 
+        cv2.imshow("converted hsv",cvt_hsv)
         cv2.imshow("original", color)
         cv2.imshow("color_detect_hsv",color_detect_hsv)
         cv2.imshow("converted",conv)
@@ -61,7 +62,7 @@ if __name__ == "__main__":
 
     # 이진화를 위해 1channel 인 grayscale 로 변경
     bin = cv2.cvtColor(color_detect_hsv,cv2.COLOR_BGR2GRAY) 
-
+    cv2.imshow("gray",bin)
     # img binary 화
     bin_th = 50
     ret, bin_img = cv2.threshold(bin,bin_th,1,cv2.THRESH_BINARY)

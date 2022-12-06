@@ -23,7 +23,7 @@ rst = cv2.vconcat([cvt1,cvt2])
 dst = cv2.resize(rst,(750,750),interpolation=cv2.INTER_LINEAR)
 
 cv2.imshow("color",color)
-cv2.imshow("converted",dst)
+cv2.imshow("converted",rst)
 
 cv2.waitKey()
 cv2.destroyAllWindows()

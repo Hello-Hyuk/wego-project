@@ -67,22 +67,23 @@ def main():
             #obj data
             img_cam = udp_cam.raw_img
             cv2.imshow("img",img_cam)
+            cv2.imwrite("obj.jpg",img_cam)
             # 이미지 w, h 추출
             img_h, img_w = (img_cam.shape[0],img_cam.shape[1])
             bev_img, mat, inv_mat = bird_eye_view(img_cam, bev_roi, warp_dst)
 
             #draw roi
-            draw_roi(img_cam, bev_roi, warp_dst)
+            #draw_roi(img_cam, bev_roi, warp_dst)
 
             # color thresh
             cv2.imshow("bev",bev_img)
             ht = hls_thresh(bev_img)
             lbc = lab_b_channel(bev_img)
-            ib = imgblend(bev_img)
+            ib = hsv(bev_img)
 
-            # cv2.imshow("hsv",ib*255)
-            # cv2.imshow("hsl",ht*255)
-            # cv2.imshow("CIELAB",lbc*255)
+            cv2.imshow("hsv",ib*255)
+            cv2.imshow("hsl",ht*255)
+            cv2.imshow("CIELAB",lbc*255)
             
             res2 = np.zeros_like(ht)
             res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 1
