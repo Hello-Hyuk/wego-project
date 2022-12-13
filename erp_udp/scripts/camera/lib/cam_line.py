@@ -68,7 +68,7 @@ def point_trans(pix_points, inv_mat):
     return trans_point
    
 def window_search(binary_warped):
-    """sliding window 방식을 이용하여 양 차선의 pixel값을 찾아내는 함수
+    """sliding window 방식을 이용하여 양 차선의 pixel index값을 찾아내는 함수
 
     Args:
         binary_warped (np.array): 색 영역 검출을 통해 얻은 binary array
@@ -76,33 +76,37 @@ def window_search(binary_warped):
     Returns:
         _type_: _description_
     """
-    # Take a histogram of the bottom half of the image
+    # histogram 생성
+    # y축 기준 절반 아래 부분만을 사용하여 x축 기준 픽셀의 분포를 구함
     bottom_half_y = binary_warped.shape[0]/2
     histogram = np.sum(binary_warped[int(bottom_half_y):,:], axis=0)
+    # 히스토그렘을 절반으로 나누어 좌우 히스토그램의 최대값의 인덱스를 반환
+    midpoint = np.int(histogram.shape[0]/2)
+    leftx_base = np.argmax(histogram[:midpoint])
+    rightx_base = np.argmax(histogram[midpoint:]) + midpoint
     
+    leftx_current = leftx_base
+    rightx_current = rightx_base
     # show histogram
     #show_hist(histogram)
     
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
 
-    midpoint = np.int(histogram.shape[0]/2)
-    leftx_base = np.argmax(histogram[:midpoint])
-    rightx_base = np.argmax(histogram[midpoint:]) + midpoint
-
+    ## window parameter
+    # 적절한 윈도우의 개수를 지정한다. 
+    # 개수가 너무 적으면 정확하게 차선을 찾기 힘들고.
+    # 개수가 너무 많으면 연산량이 증가하여 시간이 오래 걸린다. 
     nwindows = 9
     window_height = np.int(binary_warped.shape[0]/nwindows)
-    
+    # 윈도우의 너비를 지정한다. 윈도우가 옆 차선까지 넘어가지 않게 사이즈를 적절히 지정한다.
     margin = 100
-    
+    # 탐색할 최소 픽셀의 개수를 지정한다. 
+    minpix = 30
+
     lanepixel = binary_warped.nonzero()
     lanepixel_y = np.array(lanepixel[0])
     lanepixel_x = np.array(lanepixel[1])
     
-    leftx_current = leftx_base
-    rightx_current = rightx_base
-    
-    minpix = 30
-
     # pixel index 담을 list
     left_lane_idx = []
     right_lane_idx = []
@@ -233,7 +237,10 @@ def calc_vehicle_offset(frame, leftx, lefty, rightx, righty):
     bottom_x_left = left_fit[0]*(bottom_y**2) + left_fit[1]*bottom_y + left_fit[2]
     bottom_x_right = right_fit[0]*(bottom_y**2) + right_fit[1]*bottom_y + right_fit[2]
     vehicle_offset = frame.shape[1]/2 - (bottom_x_left + bottom_x_right)/2
-
+    # print(f"bottom_x_left : {bottom_x_left}")
+    # print(f"bottom_x_right : {bottom_x_right}")
+    # print(f"vehicle_offset : {vehicle_offset}")
+    
     # Convert pixel offset to meter
     xm_per_pix, _ = meter_per_pixel() 
     vehicle_offset *= xm_per_pix

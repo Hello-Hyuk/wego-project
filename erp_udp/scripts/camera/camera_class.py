@@ -72,7 +72,7 @@ class CAM():
         # thresh hold
         ht = hls_thresh(bev_img)
         lbc = lab_b_channel(bev_img)
-        ib = imgblend(bev_img)
+        ib = hsv(bev_img)
         
         res2 = np.zeros_like(ht)
         res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 1
