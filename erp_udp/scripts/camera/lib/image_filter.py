@@ -33,7 +33,6 @@ def draw_roi(frame, pts1, pts2):
          
 
 def bird_eye_view(frame, src, dst):
-
     img_size = (frame.shape[1], frame.shape[0])
 
     src = np.float32(src)

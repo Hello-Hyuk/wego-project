@@ -147,7 +147,7 @@ class PCD:
           
         pcd_bbox.color = (1, 0, 0)
 
-        #o3d.visualization.draw_geometries([pcd, pcd_bbox_center, pcd_bbox,pcd_center])
+        o3d.visualization.draw_geometries([pcd, pcd_bbox_center, pcd_bbox,pcd_center])
 
         return pcd_bbox_center_np, pcd_bbox
         
@@ -161,6 +161,7 @@ class PCD:
         # create model and prediction
         self.labels = self.pcd.cluster_dbscan(eps=1.0, min_points=10)
         # Number of clusters in labels, ignoring noise if present.
+        print(self.labels)
         n_clusters_ = len(set(self.labels)) - (1 if -1 in self.labels else 0)
         n_noise_ = list(self.labels).count(-1)
         self.labels = np.asarray(self.labels)
@@ -170,7 +171,9 @@ class PCD:
         pcd_bbox = []
         for label in range(len(set(self.labels[self.labels!=-1]))):
             idx = np.where(self.labels==label)
-            center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
+            # mean point 
+            #center_point.append(np.mean(self.pcd_np[idx,:],axis=1))
+            # 3d bbox center point
             pc, pb = self.get_pcd_center(idx)
             pcd_center.append(pc)
             pcd_bbox.append(pb)
@@ -201,21 +204,22 @@ def main():
     while True :
         if lidar.udp_lidar.is_lidar ==True:
             # data parsing
-            ####### obj info
-            # obj_data=obj.get_data()
-            # obj_data_np = np.array(obj_data)
-            # try : 
-            #     obj_coords = obj_data_np[:,2:5]
-            # except IndexError :
-            #     obj_coords = obj_data_np[2:5]
-                
+            ###### obj info
+            obj_data=obj.get_data()
+            obj_data_np = np.array(obj_data)
+            try : 
+                obj_coords = obj_data_np[:,2:5]
+            except IndexError :
+                obj_coords = obj_data_np[2:5]
+            #print("obj",obj_coords)    
             ####### ego info
             status_data = ego.get_data()
             status_data_np = np.array(status_data)
             ego_coords = status_data_np[12:15]
             
             # compare with sim object coordinate
-            #sim_coord = obj_coords - ego_coords
+            sim_coord = obj_coords - ego_coords
+            print("obj",sim_coord)    
             
             #lidar call_back function
             lidar.lidar_call_back()

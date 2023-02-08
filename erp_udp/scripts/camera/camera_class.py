@@ -1,15 +1,6 @@
-from inspect import ismethoddescriptor
-from msilib.schema import RemoveIniFile
-import socket
-from traceback import print_tb
-from turtle import position
-from wave import Wave_write
 import cv2
 import numpy as np
 import time
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from lib.morai_udp_parser import udp_parser
 from lib.cam_util import UDP_CAM_Parser
 from lib.image_filter import *
 from lib.cam_line import *
@@ -65,7 +56,9 @@ class CAM():
         self.steer = 0 
         
     def camera_call_back(self):
+        
         img_cam = self.udp_cam.raw_img
+        
         # 이미지 w, h 추출
         bev_img, _, _ = bird_eye_view(img_cam, bev_roi, warp_dst)
         
@@ -75,13 +68,16 @@ class CAM():
         ib = hsv(bev_img)
         
         res2 = np.zeros_like(ht)
-        res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 1
+        #res2[((ht == 1)&(ib==1))|((lbc == 1)&(ib==1))] = 255
+        res2[(((ht == 1)|(ib == 1))|(lbc == 1))] = 1
+        #res2[((ht == 1)|(ib == 1))|] = 1
         
         try :
-            _, _, _, leftx, lefty, rightx, righty = window_search(res2)
+            _, _, _, leftx, lefty, rightx, righty, win_img = window_search(res2)
         except TypeError:
             pass
         
+        cv2.imshow("sliding window result",win_img)
         # curvature
         curveleft, curveright = calc_curve(leftx, lefty, rightx, righty)
         self.curvature = (curveleft+curveright)/2
@@ -104,7 +100,7 @@ def main():
     cam = CAM()
     
     while True :
-        if cam.udp_cam.is_img==True :
+        if cam.udp_cam.is_img==True and cv2.waitKey(33) != ord('q'):
             cam.camera_call_back()
             cam.display_info()
             time.sleep(0.1)

@@ -88,8 +88,6 @@ class planner :
       
 
 if __name__ == "__main__":
-
-
     kicty=planner()
     while True :
         pass

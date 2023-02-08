@@ -17,8 +17,7 @@ class PCD:
     def __init__(self):
         # shape (,3)
         self.pcd =  o3d.geometry.PointCloud()
-        self.pcd_np = None
-    
+        self.pcd_np = None    
 
     def Voxelize(self):
         self.pcd = self.pcd.voxel_down_sample(voxel_size=0.2)
@@ -45,6 +44,7 @@ class PCD:
         channel_idx = np.where(channel_list == channel_select)
         channel_idx = channel_idx[1][0]
         
+        print("shape of points",points.shape)
         points = points[channel_idx::16,:]
         
         self.point_np2pcd(points.T)
@@ -68,7 +68,7 @@ def main():
     udp_lidar = UDP_LIDAR_Parser(user_ip, lidar_port, params_lidar=params_lidar)
     pcd = PCD()
     while True :
-        if udp_lidar.is_lidar ==True:
+        if udp_lidar.is_lidar == True:
             x=udp_lidar.x
             y=udp_lidar.y
             z=udp_lidar.z
@@ -82,11 +82,11 @@ def main():
             pcd.point_np2pcd(points)
             
             # channel filtering
-            #pcd.channel_filtering(1)
-            pcd.Display_pcd()
+            # pcd.channel_filtering(1)
+            # pcd.Display_pcd()
             
             # ROI filtering
-            pcd.ROI_filtering(10, 3)
+            pcd.ROI_filtering(15, 3)
             pcd.Display_pcd()
             
              

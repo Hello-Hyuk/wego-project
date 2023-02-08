@@ -24,7 +24,7 @@ class E_STOP :
         self._is_status=False
         self.distance = []
         # 거리 임계값
-        self.dist_thresh = 8.0
+        self.dist_thresh = 12.0
         
         while not self._is_status:
             if not self.status.get_data() :
@@ -43,7 +43,6 @@ class E_STOP :
                     self.distance.append(math.sqrt(point[0]**2 + point[1]**2))
             else :
                 self.distance = []
-                
                 
             ctrl_mode = 2 # 2 = AutoMode / 1 = KeyBoard
             Gear = 4 # 4 1 : (P / parking ) 2 (R / reverse) 3 (N / Neutral)  4 : (D / Drive) 5 : (L)

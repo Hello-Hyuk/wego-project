@@ -174,13 +174,8 @@ def window_search(binary_warped):
 
     cv2.polylines(out_img, [right], False, (0,255,0), thickness=5)
     cv2.polylines(out_img, [left], False, (0,0,255), thickness=5)
-    # cv2.polylines(out_img, [center], False, (255,0,0), thickness=5)
-    # print("left lane idx: \n",max(left_lane_idx))
-    # print(" idx: \n",left)
-    cv2.imshow("window search",out_img)
-    #return left_lane_idx, right_lane_idx, out_img, left, right, center
-
-    return left, right, center, leftx, lefty, rightx, righty
+    
+    return left, right, center, leftx, lefty, rightx, righty, out_img
 
 def show_hist(histogram):
     plt.plot(np.arange(640),histogram)
