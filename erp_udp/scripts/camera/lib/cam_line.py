@@ -261,6 +261,5 @@ def visual_SLAM(map, left_wp, right_wp):
     cv2.line(map,(int_rwp[0],int_rwp[1]),(int_rwp[0],int_rwp[1]),(0,255,0),5)
     cmap = cv2.resize(map,(500,500))
     cv2.imshow("display ",cmap)
-    cv2.waitKey(1)
     
     return map
